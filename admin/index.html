@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tributary — Research Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e0f0c; --bg2:#161813; --bg3:#1e2019;
+  --ink:#eae5d6; --dim:#8a8778; --faint:#4a4940; --rule:#2a2c24;
+  --gold:#d4a04a; --golddim:#8a6a32;
+  --up:#7fb069; --down:#c05746; --hold:#d4a04a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13px;min-height:100vh;}
+
+/* ── LOCK SCREEN ── */
+#lock{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;}
+#lock h1{font-family:'Fraunces',serif;font-size:32px;font-weight:400;font-style:italic;color:var(--gold);}
+#lock .eyebrow{font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--faint);}
+#lock input{background:var(--bg3);border:1px solid var(--rule);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:14px;padding:12px 16px;width:280px;outline:none;text-align:center;letter-spacing:0.1em;}
+#lock input:focus{border-color:var(--golddim);}
+#lock .err{color:var(--down);font-size:11px;letter-spacing:0.1em;}
+#lock button{background:var(--golddim);border:1px solid var(--gold);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:10px;padding:10px 24px;cursor:pointer;letter-spacing:0.2em;text-transform:uppercase;width:280px;}
+#lock button:hover{background:var(--gold);color:var(--bg);}
+
+/* ── SHELL ── */
+.shell{max-width:1100px;margin:0 auto;padding:28px 32px 80px;}
+
+/* ── HEADER ── */
+header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid var(--rule);margin-bottom:28px;gap:16px;flex-wrap:wrap;}
+.brand .eyebrow{font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);}
+.brand h1{font-family:'Fraunces',serif;font-size:28px;font-weight:400;font-style:italic;}
+.brand h1 em{font-style:normal;font-weight:600;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+#status-msg{font-size:10px;color:var(--faint);letter-spacing:0.1em;}
+#status-msg.ok{color:var(--up);}
+#status-msg.err{color:var(--down);}
+#status-msg.saving{color:var(--gold);}
+
+/* ── TICKER TABS ── */
+.ticker-tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);margin-bottom:24px;flex-wrap:wrap;}
+.ttab{padding:8px 16px;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;color:var(--faint);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;}
+.ttab:hover{color:var(--dim);}
+.ttab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.ttab .badge{font-size:8px;padding:1px 5px;border:1px solid;margin-left:5px;vertical-align:middle;}
+.ttab .badge.BULL,.ttab .badge.BUY{color:var(--up);border-color:var(--up);}
+.ttab .badge.BEAR,.ttab .badge.SELL{color:var(--down);border-color:var(--down);}
+.ttab .badge.HOLD,.ttab .badge.NEUTRAL,.ttab .badge.WATCH{color:var(--hold);border-color:var(--hold);}
+
+/* ── EDITOR PANEL ── */
+.editor-panel{display:none;}
+.editor-panel.active{display:block;}
+
+.panel-header{display:flex;align-items:baseline;gap:16px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--rule);}
+.panel-header .sym{font-family:'Fraunces',serif;font-size:28px;font-weight:600;}
+.panel-header .co-name{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;}
+.panel-header .price-info{margin-left:auto;text-align:right;font-size:11px;}
+.panel-header .price{font-size:20px;font-weight:500;}
+.panel-header .chg.up{color:var(--up);}
+.panel-header .chg.dn{color:var(--down);}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:700px){.form-grid{grid-template-columns:1fr;}}
+.full{grid-column:1/-1;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--faint);}
+.field input,.field textarea,.field select{
+  background:var(--bg3);border:1px solid var(--rule);color:var(--ink);
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  padding:9px 11px;outline:none;width:100%;resize:vertical;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--golddim);}
+.field select option{background:var(--bg3);}
+.field .hint{font-size:9px;color:var(--faint);margin-top:3px;}
+
+/* scenario row */
+.scenario-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);}
+.scenario-cell{background:var(--bg2);padding:12px;}
+.scenario-cell .s-label{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px;}
+.scenario-cell.bull .s-label{color:var(--up);}
+.scenario-cell.base .s-label{color:var(--gold);}
+.scenario-cell.bear .s-label{color:var(--down);}
+.scenario-cell input{background:var(--bg);border:1px solid var(--rule);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13px;padding:7px 9px;outline:none;width:100%;}
+.scenario-cell input:focus{border-color:var(--golddim);}
+.scenario-cell textarea{background:var(--bg);border:1px solid var(--rule);color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;padding:7px 9px;outline:none;width:100%;resize:vertical;margin-top:6px;font-style:italic;}
+.scenario-cell textarea:focus{border-color:var(--golddim);}
+
+.section-divider{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--faint);padding:14px 0 8px;border-bottom:1px solid var(--rule);margin-bottom:14px;}
+
+/* ── BUTTONS ── */
+.btn{background:transparent;border:1px solid var(--rule);color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:10px;padding:9px 18px;cursor:pointer;letter-spacing:0.15em;text-transform:uppercase;transition:all 0.2s;}
+.btn:hover{border-color:var(--dim);color:var(--ink);}
+.btn.primary{background:var(--golddim);border-color:var(--gold);color:var(--ink);}
+.btn.primary:hover{background:var(--gold);color:var(--bg);}
+.btn.publish{background:rgba(127,176,105,0.1);border-color:var(--up);color:var(--up);}
+.btn.publish:hover{background:var(--up);color:var(--bg);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+.action-bar{display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--rule);align-items:center;flex-wrap:wrap;}
+
+/* ── PUBLISH LOG ── */
+#publish-log{display:none;background:var(--bg2);border:1px solid var(--rule);padding:14px;margin-top:16px;font-size:11px;color:var(--dim);line-height:1.8;}
+#publish-log.open{display:block;}
+#publish-log .log-line.ok{color:var(--up);}
+#publish-log .log-line.err{color:var(--down);}
+#publish-log .log-line.info{color:var(--gold);}
+
+/* ── SCREENSHOTS ── */
+.drop-zone {
+  border: 1px dashed var(--rule); padding: 20px; text-align: center;
+  cursor: pointer; color: var(--faint); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.2s;
+  margin-top: 6px;
+}
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--golddim); color: var(--gold); }
+.screenshot-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.screenshot-item { position: relative; width: 140px; }
+.screenshot-item img { width: 140px; height: 90px; object-fit: cover; object-position: top; border: 1px solid var(--rule); display: block; cursor: pointer; transition: all 0.2s; }
+.screenshot-item img:hover { border-color: var(--golddim); }
+.screenshot-item .ss-remove { position: absolute; top: -6px; right: -6px; background: var(--down); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; padding: 0; }
+.screenshot-item .ss-label { font-size: 9px; color: var(--faint); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* lightbox */
+#ss-lightbox { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.92); align-items:center; justify-content:center; }
+#ss-lightbox.open { display:flex; }
+#ss-lightbox img { max-width:90vw; max-height:90vh; object-fit:contain; border:1px solid var(--rule); }
+#ss-lightbox-close { position:absolute; top:20px; right:20px; background:transparent; border:1px solid var(--rule); color:var(--ink); width:36px; height:36px; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; }
+#ss-lightbox-close:hover { border-color:var(--gold); color:var(--gold); }
+
+/* ── REORDER PANEL ── */
+#reorder-panel { display: none; }
+#reorder-panel.active { display: block; }
+.reorder-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.reorder-list { list-style: none; margin: 0; padding: 0; max-width: 640px; }
+.reorder-item {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 16px; margin-bottom: 6px;
+  background: var(--card); border: 1px solid var(--rule);
+  border-radius: 4px; cursor: grab; user-select: none;
+  transition: all 0.15s;
+}
+.reorder-item:active { cursor: grabbing; }
+.reorder-item.dragging { opacity: 0.4; border-color: var(--gold); }
+.reorder-item.drag-over { border-color: var(--gold); background: rgba(201,163,78,0.08); }
+.reorder-handle { color: var(--faint); font-size: 16px; cursor: grab; }
+.reorder-num { color: var(--faint); font-size: 10px; width: 24px; text-align: right; }
+.reorder-ticker { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: var(--ink); min-width: 60px; }
+.reorder-meta { font-size: 10px; color: var(--faint); flex: 1; }
+.reorder-badge { font-size: 8px; padding: 2px 6px; border: 1px solid; }
+.reorder-info { font-size: 10px; color: var(--faint); margin-top: 16px; }
+
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+
+<!-- SCREENSHOT LIGHTBOX -->
+<div id="ss-lightbox" onclick="if(event.target===this)closeSsLightbox()">
+  <button id="ss-lightbox-close" onclick="closeSsLightbox()">×</button>
+  <img id="ss-lightbox-img" src="" alt="">
+</div>
+
+<div id="lock">
+  <div class="eyebrow">Tributary Investments</div>
+  <h1>Research <em>Editor</em></h1>
+  <input type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlock()">
+  <div class="err" id="pw-err"></div>
+  <button onclick="unlock()">Unlock</button>
+</div>
+
+<div class="shell" id="app" style="display:none;">
+  <header>
+    <div class="brand">
+      <div class="eyebrow">Tributary Investments · Research Editor</div>
+      <h1>The <em>Tributary</em> — Admin</h1>
+    </div>
+    <div class="header-actions">
+      <span id="status-msg"></span>
+      <a href="https://docs.google.com/spreadsheets/d/1e5MLi-lQGqHbmLcOce3K0WfjNsPW5B9Gk7yHI6R_Y48" target="_blank" class="btn" style="text-decoration:none;">📊 Google Sheet</a>
+      <button class="btn" onclick="saveAllToSheets()">💾 Save All to Sheets</button>
+      <button class="btn" onclick="showReorder()" id="reorder-btn">⇅ Reorder</button>
+      <button class="btn publish" onclick="publishDashboard()">🚀 Rebuild &amp; Publish</button>
+    </div>
+  </header>
+
+  <div class="ticker-tabs" id="ticker-tabs"></div>
+  <div id="editors"></div>
+
+  
+  <div id="reorder-panel">
+    <div class="reorder-header">
+      <div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:0.1em;margin-bottom:4px;">REORDER COVERED POSITIONS</div>
+        <div style="font-size:10px;color:var(--faint);">Drag rows to rearrange. Click Save Order to write to Sheets and rebuild the dashboard.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span id="reorder-status" style="font-size:10px;color:var(--faint);"></span>
+        <button class="btn" onclick="saveOrder()" id="save-order-btn">💾 Save Order</button>
+        <button class="btn" onclick="hideReorder()" style="opacity:0.6">✕ Close</button>
+      </div>
+    </div>
+    <ol class="reorder-list" id="reorder-list"></ol>
+    <div class="reorder-info">After saving, the dashboard will rebuild automatically (takes ~10 seconds).</div>
+  </div>
+
+  <div id="publish-log"></div>
+</div>
+
+<script type="application/json" id="cfg">{
+  "password": "Tributary2026!",
+  "matonKey": "Njed9cp8kEWNCJF8FWO9GoXLAgfCa6lMwgXY21Weod2wcoi3AanLTM5f9j5Wl4NX9JY-5HDIMuq0PzV0ZBks3lY2j-By3s0nYls",
+  "sheetId": "1e5MLi-lQGqHbmLcOce3K0WfjNsPW5B9Gk7yHI6R_Y48",
+  "intelGid": "715912817",
+  "sp500Gid": "2060821873",
+  "wpUser": "user",
+  "wpPass": "YSXH TG8k URpv GuTk Gpng 6a0M",
+  "wpPageId": 129,
+  "dashboardTemplate": "https://tributaryinvestments.com/wp-content/uploads/2026/04/dashboard-3.html"
+}</script>
+
+<script type="application/json" id="watchlist">{
+  "AAPL":  {"name":"Apple Inc.",        "price":251.79,"chgPct":-2.73},
+  "AMZN":  {"name":"Amazon.com Inc.",   "price":212.59,"chgPct":-0.09},
+  "GOOGL": {"name":"Alphabet Inc.",     "price":302.64,"chgPct":0.88},
+  "META":  {"name":"Meta Platforms",    "price":569.18,"chgPct":-0.67},
+  "MSFT":  {"name":"Microsoft Corp.",   "price":370.68,"chgPct":-0.59},
+  "NFLX":  {"name":"Netflix Inc.",      "price":98.57, "chgPct":-0.36},
+  "TSLA":  {"name":"Tesla Inc.",        "price":342.57,"chgPct":-2.91},
+  "NVDA":  {"name":"NVIDIA Corp.",      "price":176.31,"chgPct":-0.75},
+  "TBLA":  {"name":"Taboola.com Ltd.",  "price":3.29,  "chgPct":0.30}
+}</script>
+
+<script>
+const CFG       = JSON.parse(document.getElementById('cfg').textContent);
+
+// Populated dynamically from Sheets on load
+let WATCHLIST = JSON.parse(document.getElementById('watchlist').textContent); // fallback
+let TICKERS   = Object.keys(WATCHLIST);
+
+// Current in-memory intel state
+let intel = {};
+
+/* ── LOCK ── */
+function unlock() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw !== CFG.password) {
+    document.getElementById('pw-err').textContent = 'Incorrect password';
+    return;
+  }
+  document.getElementById('lock').style.display = 'none';
+  document.getElementById('app').style.display  = 'block';
+  initEditor();
+}
+
+/* ── INIT ── */
+async function initEditor() {
+  setStatus('Loading from Sheets…', '');
+  try {
+    await loadPricesFromSheets();
+    await loadIntelFromSheets();
+    setStatus('Loaded ✓', 'ok');
+  } catch(e) {
+    setStatus('Could not load Sheets — using defaults', 'err');
+    TICKERS.forEach(t => { intel[t] = defaultIntel(t); });
+  }
+  renderTabs();
+  renderEditors();
+  switchTab(TICKERS[0]);
+}
+
+async function loadPricesFromSheets() {
+  const url = `https://docs.google.com/spreadsheets/d/${CFG.sheetId}/gviz/tq?tqx=out:json&gid=${CFG.sp500Gid}&tq=${encodeURIComponent('select *')}`;
+  const txt = await fetch(url).then(r => r.text());
+  const j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}')+1));
+  const newWatchlist = {};
+  for (const row of j.table.rows) {
+    const c = row.c || [];
+    const cv  = i => (c[i] && c[i].v != null) ? String(c[i].v).trim() : '';
+    const cvn = i => (c[i] && c[i].v != null) ? parseFloat(c[i].v) : null;
+    const t = cv(0).toUpperCase();
+    if (!t || t === 'TICKER') continue;
+    const chgPctRaw = cv(4).replace('%','');
+    newWatchlist[t] = {
+      ticker: t, name: cv(1),
+      price:    cvn(2), chgPct: chgPctRaw ? parseFloat(chgPctRaw) : null,
+      mcap:     cvn(5), pe:     cvn(6), eps:   cvn(7),
+      hi52:     cvn(8), lo52:   cvn(9), vol:   cvn(10),
+      beta:     cvn(12), divYield: cvn(13),
+    };
+  }
+  if (Object.keys(newWatchlist).length > 0) {
+    WATCHLIST = newWatchlist;
+    TICKERS   = Object.keys(WATCHLIST);
+  }
+}
+
+function defaultIntel(t) {
+  return { ticker:t, sentiment:'WATCH', conviction:'', target:'', horizon:'',
+    thesis:'', risks:'', notes:'', bullTarget:'', baseTarget:'', bearTarget:'',
+    bullThesis:'', baseThesis:'', bearThesis:'', focus:'', catalysts:'', keyMetrics:'', date:'' };
+}
+
+/* ── LOAD FROM SHEETS ── */
+async function loadIntelFromSheets() {
+  const url = `https://docs.google.com/spreadsheets/d/${CFG.sheetId}/gviz/tq?tqx=out:json&gid=${CFG.intelGid}&tq=${encodeURIComponent('select *')}`;
+  const res = await fetch(url);
+  const txt = await res.text();
+  const json = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}')+1));
+  const rows = json.table.rows || [];
+  TICKERS.forEach(t => { intel[t] = defaultIntel(t); });
+  for (const row of rows) {
+    const c = row.c || [];
+    const cv = (i) => (c[i] && c[i].v != null) ? String(c[i].v).trim() : '';
+    const t = cv(0).toUpperCase();
+    if (!t || t === 'TICKER') continue;
+    intel[t] = {
+      ticker: t, date: cv(1), sentiment: cv(2).toUpperCase() || 'WATCH',
+      conviction: cv(3).replace('.0',''), target: cv(4).replace('.0',''),
+      horizon: cv(5), thesis: cv(6), risks: cv(7), notes: cv(8),
+      bullTarget: cv(10).replace('.0',''), baseTarget: cv(11).replace('.0',''),
+      bearTarget: cv(12).replace('.0',''), bullThesis: cv(13),
+      bearThesis: cv(14), focus: cv(15), catalysts: cv(16), keyMetrics: cv(17),
+      charts: cv(18), baseThesis: cv(19),
+    };
+  }
+}
+
+/* ── RENDER TABS ── */
+function renderTabs() {
+  document.getElementById('ticker-tabs').innerHTML = TICKERS.map(t => {
+    const s = (intel[t] || {}).sentiment || 'WATCH';
+    return `<div class="ttab" id="tab-${t}" onclick="switchTab('${t}')">
+      ${t} <span class="badge ${s}">${s}</span>
+    </div>`;
+  }).join('');
+}
+
+function switchTab(t) {
+  TICKERS.forEach(tk => {
+    document.getElementById('tab-'+tk)?.classList.toggle('active', tk===t);
+    document.getElementById('panel-'+tk)?.classList.toggle('active', tk===t);
+  });
+}
+
+/* ── RENDER EDITORS ── */
+function renderEditors() {
+  document.getElementById('editors').innerHTML = TICKERS.map(t => buildPanel(t)).join('');
+  TICKERS.forEach(t => renderChartPreviews(t));
+}
+
+function buildPanel(t) {
+  const d = intel[t] || defaultIntel(t);
+  const w = WATCHLIST[t] || {};
+  const up = w.chgPct >= 0;
+  const chgStr = w.chgPct != null ? (up?'+':'')+w.chgPct.toFixed(2)+'%' : '';
+
+  return `
+<div class="editor-panel" id="panel-${t}">
+  <div class="panel-header">
+    <div class="sym">${t}</div>
+    <div class="co-name">${w.name||''}</div>
+    <div class="price-info" style="margin-left:auto;">
+      <div class="price">$${w.price||'—'}</div>
+      <div class="chg ${up?'up':'dn'}">${chgStr} · Apr 7 close</div>
+    </div>
+  </div>
+
+  <div class="form-grid">
+    <div class="field">
+      <label>Sentiment</label>
+      <select id="${t}-sentiment">
+        <option ${d.sentiment==='BULL'?'selected':''}>BULL</option>
+        <option ${d.sentiment==='HOLD'?'selected':''}>HOLD</option>
+        <option ${d.sentiment==='BEAR'?'selected':''}>BEAR</option>
+        <option ${d.sentiment==='WATCH'?'selected':''}>WATCH</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Conviction (1–10)</label>
+      <input type="number" id="${t}-conviction" min="1" max="10" value="${d.conviction}" placeholder="8">
+    </div>
+    <div class="field">
+      <label>Base Price Target ($)</label>
+      <input type="text" id="${t}-target" value="${d.target}" placeholder="e.g. 225">
+    </div>
+    <div class="field">
+      <label>Time Horizon</label>
+      <input type="text" id="${t}-horizon" value="${d.horizon}" placeholder="e.g. 12 months">
+    </div>
+  </div>
+
+  <div class="section-divider">Price Scenarios</div>
+  <div class="scenario-row">
+    <div class="scenario-cell bull">
+      <div class="s-label">Bull Case</div>
+      <input type="text" id="${t}-bullTarget" value="${d.bullTarget}" placeholder="Target price">
+      <textarea id="${t}-bullThesis" rows="3" placeholder="What needs to happen…">${d.bullThesis}</textarea>
+    </div>
+    <div class="scenario-cell base">
+      <div class="s-label">Base Case</div>
+      <input type="text" id="${t}-baseTarget" value="${d.baseTarget}" placeholder="Target price">
+      <textarea id="${t}-baseThesis" rows="3" placeholder="Base case description…">${d.baseThesis||''}</textarea>
+    </div>
+    <div class="scenario-cell bear">
+      <div class="s-label">Bear Case</div>
+      <input type="text" id="${t}-bearTarget" value="${d.bearTarget}" placeholder="Target price">
+      <textarea id="${t}-bearThesis" rows="3" placeholder="What breaks the thesis…">${d.bearThesis}</textarea>
+    </div>
+  </div>
+
+  <div class="section-divider" style="margin-top:16px;">Research Notes</div>
+  <div class="form-grid">
+    <div class="field full">
+      <label>Thesis</label>
+      <textarea id="${t}-thesis" rows="4" placeholder="Your investment thesis…">${d.thesis}</textarea>
+    </div>
+    <div class="field full">
+      <label>Key Risks</label>
+      <textarea id="${t}-risks" rows="3" placeholder="Key risks to monitor…">${d.risks}</textarea>
+    </div>
+    <div class="field full">
+      <label>Notes</label>
+      <textarea id="${t}-notes" rows="2" placeholder="Additional notes…">${d.notes}</textarea>
+    </div>
+    <div class="field full">
+      <label>Focus Areas <span class="hint">(comma separated)</span></label>
+      <input type="text" id="${t}-focus" value="${d.focus}" placeholder="e.g. China exposure, Services margin, AI features">
+    </div>
+    <div class="field full">
+      <label>Catalysts <span class="hint">(comma separated)</span></label>
+      <input type="text" id="${t}-catalysts" value="${d.catalysts}" placeholder="e.g. Q3 earnings, WWDC, Fed meeting">
+    </div>
+    <div class="field full">
+      <label>Key Metrics to Track <span class="hint">(comma separated)</span></label>
+      <input type="text" id="${t}-keyMetrics" value="${d.keyMetrics}" placeholder="e.g. Services Revenue, Gross Margin %, China Revenue">
+    </div>
+  </div>
+
+  <div class="section-divider" style="margin-top:16px;">Charts &amp; Screenshots</div>
+  <div class="field full">
+    <label>Image URLs <span style="font-weight:400;color:var(--faint);font-size:10px">(one per line — upload via WP Media, paste URL here)</span></label>
+    <textarea id="${t}-charts" rows="3" placeholder="https://tributaryinvestments.com/wp-content/uploads/2026/04/chart.jpg">${d.charts ? d.charts.split(',').map(u=>u.trim()).filter(Boolean).join('\n') : ''}</textarea>
+    <div id="ss-grid-${t}" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;"></div>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn primary" onclick="saveTickerToSheets('${t}')">💾 Save ${t} to Sheets</button>
+    <button class="btn" onclick="switchTab('${TICKERS[(TICKERS.indexOf(t)+1)%TICKERS.length]}')">Next → ${TICKERS[(TICKERS.indexOf(t)+1)%TICKERS.length]}</button>
+  </div>
+</div>`;
+}
+
+/* ── READ FORM VALUES ── */
+function readFormValues(t) {
+  const v = (id) => (document.getElementById(id)||{}).value || '';
+  const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  return {
+    ticker: t, date: today,
+    sentiment:  v(t+'-sentiment'),
+    conviction: v(t+'-conviction'),
+    target:     v(t+'-target'),
+    horizon:    v(t+'-horizon'),
+    thesis:     v(t+'-thesis'),
+    risks:      v(t+'-risks'),
+    notes:      v(t+'-notes'),
+    bullTarget: v(t+'-bullTarget'),
+    baseTarget: v(t+'-baseTarget'),
+    bearTarget: v(t+'-bearTarget'),
+    bullThesis: v(t+'-bullThesis'),
+    bearThesis: v(t+'-bearThesis'),
+    focus:      v(t+'-focus'),
+    catalysts:  v(t+'-catalysts'),
+    keyMetrics:  v(t+'-keyMetrics'),
+    baseThesis:  v(t+'-baseThesis'),
+    charts:      v(t+'-charts'),
+  };
+}
+
+/* ── SAVE TO SHEETS ── */
+async function saveTickerToSheets(t) {
+  const data = readFormValues(t);
+  intel[t] = data;
+  // Update tab badge
+  document.getElementById('tab-'+t).querySelector('.badge').textContent = data.sentiment;
+  document.getElementById('tab-'+t).querySelector('.badge').className = 'badge '+data.sentiment;
+  await writeRowToSheets(t, data);
+}
+
+async function saveAllToSheets() {
+  setStatus('Saving all to Sheets…', 'saving');
+  for (const t of TICKERS) {
+    const data = readFormValues(t);
+    intel[t] = data;
+    await writeRowToSheets(t, data);
+  }
+  setStatus('All saved to Sheets ✓', 'ok');
+  renderTabs();
+}
+
+async function writeRowToSheets(t, data) {
+  // Find the row index for this ticker
+  const rowData = [
+    data.ticker, data.date, data.sentiment, data.conviction, data.target,
+    data.horizon, data.thesis, data.risks, data.notes, data.date,
+    data.bullTarget, data.baseTarget, data.bearTarget,
+    data.bullThesis, data.bearThesis,
+    data.focus, data.catalysts, data.keyMetrics,
+    (data.charts || '').split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')).join(','),
+    data.baseThesis,
+  ];
+
+  // Find which row this ticker is in using _rowIdx (0-based data row → +2 for header+1-index)
+  const rowNum = (intel[t]?._rowIdx != null) ? intel[t]._rowIdx + 2 : TICKERS.indexOf(t) + 2;
+  const range = encodeURIComponent(`My_Intel!A${rowNum}:T${rowNum}`);
+  const url = `https://gateway.maton.ai/google-sheets/v4/spreadsheets/${CFG.sheetId}/values/${range}?valueInputOption=USER_ENTERED`;
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${CFG.matonKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ values: [rowData] })
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Sheets write failed: ${err}`);
+  }
+}
+
+/* ── PUBLISH DASHBOARD ── */
+async function publishDashboard() {
+  const log = document.getElementById('publish-log');
+  log.innerHTML = '';
+  log.classList.add('open');
+
+  const addLog = (msg, cls='') => {
+    log.innerHTML += `<div class="log-line ${cls}">${msg}</div>`;
+    log.scrollTop = log.scrollHeight;
+  };
+
+  try {
+    addLog('→ Saving all research to Sheets…', 'info');
+    for (const t of TICKERS) {
+      const data = readFormValues(t);
+      intel[t] = data;
+      await writeRowToSheets(t, data);
+      addLog(`  ✓ ${t} saved`);
+    }
+
+
+    addLog('→ Sending publish signal…', 'info');
+    // Write PUBLISH trigger to Google Sheets — server-side watcher picks it up within 10 seconds
+    const triggerRange = encodeURIComponent('Triggers!A2:C2');
+    const triggerUrl = `https://gateway.maton.ai/google-sheets/v4/spreadsheets/${CFG.sheetId}/values/${triggerRange}?valueInputOption=USER_ENTERED`;
+    const triggerRes = await fetch(triggerUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${CFG.matonKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ values: [['PUBLISH', new Date().toISOString(), 'pending']] })
+    });
+    if (!triggerRes.ok) throw new Error('Could not write publish trigger to Sheets');
+    addLog('  ✓ Publish signal sent — dashboard will update within 10 seconds');
+    addLog('  Watching for deploy completion…', 'info');
+
+    // Poll trigger cell for up to 30 seconds waiting for IDLE (= deployed)
+    const pollUrl = `https://docs.google.com/spreadsheets/d/${CFG.sheetId}/gviz/tq?tqx=out:json&gid=210419844&tq=${encodeURIComponent('select *')}`;
+    for (let i = 0; i < 15; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+      try {
+        const pr = await fetch(pollUrl);
+        const pt = await pr.text();
+        const pj = JSON.parse(pt.slice(pt.indexOf('{'), pt.lastIndexOf('}')+1));
+        const rows = pj.table.rows;
+        if (rows.length >= 2) {
+          const action = String((rows[1].c[0]||{}).v||'').trim();
+          const status = String((rows[1].c[2]||{}).v||'').trim();
+          if (action === 'IDLE' && status === 'deployed') {
+            addLog('  ✓ Deploy confirmed!', 'ok');
+            break;
+          }
+          if (action === 'IDLE' && status.includes('failed')) {
+            addLog('  ✗ Deploy failed: ' + status, 'err');
+            break;
+          }
+        }
+      } catch(e) { /* keep polling */ }
+    }
+
+    addLog('', '');
+    addLog('🚀 Dashboard live → <a href="https://tributaryinvestments.com/dashboard/" target="_blank" style="color:var(--gold)">tributaryinvestments.com/dashboard</a>', 'ok');
+    setStatus('Published ✓', 'ok');
+
+  } catch(e) {
+    addLog('✗ Error: ' + e.message, 'err');
+    setStatus('Publish failed — see log', 'err');
+    console.error(e);
+  }
+}
+
+/* ── UTILITIES ── */
+function setStatus(msg, cls) {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.className = cls;
+}
+/* ── CHART PREVIEWS ── */
+function renderChartPreviews(t) {
+  const textarea = document.getElementById(t+'-charts');
+  const grid = document.getElementById('ss-grid-'+t);
+  if (!textarea || !grid) return;
+  const urls = textarea.value.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http'));
+  grid.innerHTML = urls.map(url => `
+    <div class="screenshot-item">
+      <img src="${url}" onclick="openSsLightbox('${url}')" onerror="this.style.opacity=0.3;this.title='Failed to load'">
+      <div class="ss-label" style="font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url.split('/').pop()}</div>
+    </div>`).join('') || '<div style="font-size:10px;color:var(--faint);padding:6px 0;">No charts yet — paste URLs above</div>';
+  // Live update on textarea change
+  textarea.oninput = () => renderChartPreviews(t);
+}
+
+function openSsLightbox(src) {
+  document.getElementById('ss-lightbox-img').src = src;
+  document.getElementById('ss-lightbox').classList.add('open');
+}
+function closeSsLightbox() {
+  document.getElementById('ss-lightbox').classList.remove('open');
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   REORDER POSITIONS
+   ═══════════════════════════════════════════════════════ */
+
+let reorderOrder = []; // current ordered array of tickers
+let dragSrc = null;
+
+function showReorder() {
+  // Hide all editor panels
+  document.getElementById('editors').style.display = 'none';
+  document.getElementById('reorder-panel').classList.add('active');
+  document.getElementById('reorder-btn').style.opacity = '0.5';
+  buildReorderList();
+}
+
+function hideReorder() {
+  document.getElementById('editors').style.display = '';
+  document.getElementById('reorder-panel').classList.remove('active');
+  document.getElementById('reorder-btn').style.opacity = '1';
+}
+
+function buildReorderList() {
+  reorderOrder = [...TICKERS]; // copy current order
+  renderReorderList();
+}
+
+function renderReorderList() {
+  const list = document.getElementById('reorder-list');
+  list.innerHTML = reorderOrder.map((t, i) => {
+    const d = intel[t] || {};
+    const s = d.sentiment || 'WATCH';
+    const thesis = (d.thesis || '').slice(0, 80);
+    const conv = d.conviction ? `Conv: ${d.conviction}` : '';
+    const target = d.target ? `Target: $${d.target}` : '';
+    return `
+<li class="reorder-item" draggable="true" data-ticker="${t}"
+    ondragstart="onDragStart(event)" ondragover="onDragOver(event)"
+    ondrop="onDrop(event)" ondragend="onDragEnd(event)"
+    ondragleave="onDragLeave(event)">
+  <span class="reorder-handle">⠿</span>
+  <span class="reorder-num">${i + 1}</span>
+  <span class="reorder-ticker">${t}</span>
+  <span class="badge ${s} reorder-badge">${s}</span>
+  <span class="reorder-meta">${[conv, target, thesis].filter(Boolean).join(' · ')}</span>
+</li>`;
+  }).join('');
+}
+
+function onDragStart(e) {
+  dragSrc = e.currentTarget;
+  dragSrc.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragSrc.dataset.ticker);
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const target = e.currentTarget;
+  if (target !== dragSrc) target.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  const target = e.currentTarget;
+  target.classList.remove('drag-over');
+  if (target === dragSrc) return;
+
+  const fromTicker = dragSrc.dataset.ticker;
+  const toTicker   = target.dataset.ticker;
+  const fromIdx = reorderOrder.indexOf(fromTicker);
+  const toIdx   = reorderOrder.indexOf(toTicker);
+
+  // Remove from old position, insert at new position
+  reorderOrder.splice(fromIdx, 1);
+  reorderOrder.splice(toIdx, 0, fromTicker);
+  renderReorderList();
+}
+
+function onDragEnd(e) {
+  document.querySelectorAll('.reorder-item').forEach(el => {
+    el.classList.remove('dragging', 'drag-over');
+  });
+  dragSrc = null;
+}
+
+async function saveOrder() {
+  const btn = document.getElementById('save-order-btn');
+  const status = document.getElementById('reorder-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving…';
+  status.textContent = 'Fetching current data from Sheets…';
+  status.style.color = 'var(--gold)';
+
+  const apiBase = 'https://gateway.maton.ai/google-sheets/v4/spreadsheets/' + CFG.sheetId;
+  const apiHeaders = { 'Authorization': 'Bearer ' + CFG.matonKey, 'Content-Type': 'application/json' };
+
+  try {
+    // 1. Read ALL current intel rows from Sheets in existing order
+    const sheetRange = encodeURIComponent('My_Intel!A:T');
+    const readUrl = `${apiBase}/values/${sheetRange}`;
+    const readRes = await fetch(readUrl, { headers: apiHeaders });
+    const readData = await readRes.json();
+    const allRows = readData.values || [];
+
+    if (allRows.length < 2) throw new Error('No data rows found in My_Intel');
+
+    const headerRow = allRows[0];
+    const dataRows  = allRows.slice(1); // rows without header
+
+    // Build a map of ticker -> row data (use current data from Sheets)
+    const rowMap = {};
+    dataRows.forEach(row => {
+      const ticker = (row[0] || '').trim().toUpperCase();
+      if (ticker && ticker !== 'TICKER') rowMap[ticker] = row;
+    });
+
+    // 2. Build new ordered rows based on reorderOrder
+    // Tickers not in reorderOrder go at the end (shouldn't happen but safety net)
+    const newDataRows = [];
+    reorderOrder.forEach(t => {
+      if (rowMap[t]) newDataRows.push(rowMap[t]);
+    });
+    // Add any rows not in reorderOrder (safety)
+    Object.keys(rowMap).forEach(t => {
+      if (!reorderOrder.includes(t)) newDataRows.push(rowMap[t]);
+    });
+
+    // 3. Write back: clear the data area and rewrite
+    status.textContent = 'Writing new order to Sheets…';
+
+    // Clear existing data rows (keep header)
+    const clearRange = encodeURIComponent(`My_Intel!A2:T${dataRows.length + 1}`);
+    await fetch(`${apiBase}/values/${clearRange}:clear`, {
+      method: 'POST', headers: apiHeaders
+    });
+
+    // Write new ordered data
+    const writeRange = encodeURIComponent(`My_Intel!A2:T${newDataRows.length + 1}`);
+    const writeRes = await fetch(
+      `${apiBase}/values/${writeRange}?valueInputOption=USER_ENTERED`,
+      {
+        method: 'PUT',
+        headers: apiHeaders,
+        body: JSON.stringify({ values: newDataRows })
+      }
+    );
+
+    if (!writeRes.ok) throw new Error('Sheets write failed: ' + writeRes.status);
+
+    // 4. Update TICKERS order in memory
+    TICKERS.length = 0;
+    reorderOrder.forEach(t => TICKERS.push(t));
+    renderTabs();
+
+    // 5. Trigger dashboard publish
+    status.textContent = 'Triggering dashboard rebuild…';
+    await triggerPublish();
+
+    status.textContent = '✓ Order saved & dashboard rebuilding';
+    status.style.color = 'var(--up)';
+    btn.textContent = '✓ Saved';
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '💾 Save Order';
+      status.textContent = '';
+    }, 4000);
+
+  } catch (err) {
+    status.textContent = '✕ Error: ' + err.message;
+    status.style.color = 'var(--down)';
+    btn.disabled = false;
+    btn.textContent = '💾 Save Order';
+    console.error(err);
+  }
+}
+
+async function triggerPublish() {
+  // Write PUBLISH to Triggers sheet to kick off the deploy watcher
+  const triggerRange = encodeURIComponent('Triggers!A2');
+  const apiBase = 'https://gateway.maton.ai/google-sheets/v4/spreadsheets/' + CFG.sheetId;
+  const apiHeaders = { 'Authorization': 'Bearer ' + CFG.matonKey, 'Content-Type': 'application/json' };
+  await fetch(
+    `${apiBase}/values/${triggerRange}?valueInputOption=USER_ENTERED`,
+    {
+      method: 'PUT',
+      headers: apiHeaders,
+      body: JSON.stringify({ values: [['PUBLISH']] })
+    }
+  );
+}
+
+</script>
+</body>
+</html>
