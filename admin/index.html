@@ -317,7 +317,7 @@ async function loadPricesFromSheets() {
 function defaultIntel(t) {
   return { ticker:t, sentiment:'WATCH', conviction:'', target:'', horizon:'',
     thesis:'', risks:'', notes:'', bullTarget:'', baseTarget:'', bearTarget:'',
-    bullThesis:'', baseThesis:'', bearThesis:'', focus:'', catalysts:'', keyMetrics:'', date:'' };
+    bullThesis:'', baseThesis:'', bearThesis:'', focus:'', catalysts:'', keyMetrics:'', xposts:'', date:'' };
 }
 
 /* ── LOAD FROM SHEETS ── */
@@ -339,7 +339,7 @@ async function loadIntelFromSheets() {
       horizon: cv(5), thesis: cv(6), risks: cv(7), notes: cv(8),
       bullTarget: cv(10).replace('.0',''), baseTarget: cv(11).replace('.0',''),
       bearTarget: cv(12).replace('.0',''), bullThesis: cv(13),
-      bearThesis: cv(14), focus: cv(15), catalysts: cv(16), keyMetrics: cv(17),
+      bearThesis: cv(14), focus: cv(15), catalysts: cv(16), keyMetrics: cv(17), xposts: cv(20),
       charts: cv(18), baseThesis: cv(19),
     };
   }
@@ -456,6 +456,12 @@ function buildPanel(t) {
     </div>
   </div>
 
+  <div class="section-divider" style="margin-top:16px;">X / Twitter Posts</div>
+  <div class="field full">
+    <label>X Post URLs <span class="hint">(one per line — paste your x.com post links mentioning this stock)</span></label>
+    <textarea id="${t}-xposts" rows="4" placeholder="https://x.com/tributarytrades/status/123456789&#10;https://x.com/tributarytrades/status/987654321">${d.xposts ? d.xposts.split(',').map(u=>u.trim()).filter(Boolean).join('\n') : ''}</textarea>
+  </div>
+
   <div class="section-divider" style="margin-top:16px;">Charts &amp; Screenshots</div>
   <div class="field full">
     <div id="ss-grid-${t}" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
@@ -531,11 +537,12 @@ async function writeRowToSheets(t, data) {
     data.focus, data.catalysts, data.keyMetrics,
     (data.charts || '').split(',').map(u=>u.trim()).filter(u=>u.length>0).join(','),
     data.baseThesis,
+    (data.xposts || '').split(',').map(u=>u.trim()).filter(Boolean).join(','),
   ];
 
   // Find which row this ticker is in using _rowIdx (0-based data row → +2 for header+1-index)
   const rowNum = (intel[t]?._rowIdx != null) ? intel[t]._rowIdx + 2 : TICKERS.indexOf(t) + 2;
-  const range = encodeURIComponent(`My_Intel!A${rowNum}:T${rowNum}`);
+  const range = encodeURIComponent(`My_Intel!A${rowNum}:U${rowNum}`);
   const url = `https://gateway.maton.ai/google-sheets/v4/spreadsheets/${CFG.sheetId}/values/${range}?valueInputOption=USER_ENTERED`;
 
   const res = await fetch(url, {
