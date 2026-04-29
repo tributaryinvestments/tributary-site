@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<title>Masterclass Ratio Spread Options Trade on META – Tributary Investments</title>
+<meta name="description" content="A 1:2 call ratio spread on META opened for a $1,290 net credit captured nearly $13,000 in profit — a +980% return in 72 days." />
+<link rel="icon" type="image/png" href="/assets/tributary-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══ TOKENS — LIGHT (default) ═══ */
+:root {
+  --bg:         #f7f5f0;
+  --bg-2:       #ffffff;
+  --bg-3:       #edeae3;
+  --ink:        #1a1a16;
+  --ink-dim:    #6b6860;
+  --ink-faint:  #a8a49a;
+  --rule:       #dbd8d0;
+  --accent:     #b5812a;
+  --accent-dim: #d4a04a;
+  --up:         #3a7d2e;
+  --down:       #b03228;
+  --shadow:     rgba(0,0,0,0.06);
+}
+/* ═══ TOKENS — DARK ═══ */
+[data-theme="dark"] {
+  --bg:         #0e0f0c;
+  --bg-2:       #161813;
+  --bg-3:       #1e2019;
+  --ink:        #eae5d6;
+  --ink-dim:    #8a8778;
+  --ink-faint:  #4a4940;
+  --rule:       #2a2c24;
+  --accent:     #d4a04a;
+  --accent-dim: #8a6a32;
+  --up:         #7fb069;
+  --down:       #c05746;
+  --shadow:     rgba(0,0,0,0.3);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* ═══ LAYOUT ═══ */
+.site-header {
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg-2);
+  padding: 0 32px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.header-inner {
+  max-width: 900px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px; gap: 20px;
+}
+.logo-link { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo-link img { height: 28px; }
+.logo-link .wordmark {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic; font-size: 18px; font-weight: 400;
+  color: var(--ink);
+}
+.header-nav { display: flex; align-items: center; gap: 20px; }
+.header-nav a {
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-dim); text-decoration: none; transition: color 0.2s;
+}
+.header-nav a:hover { color: var(--accent); }
+
+/* theme toggle */
+.theme-toggle {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--bg-3); border: 1px solid var(--rule);
+  border-radius: 20px; padding: 3px 10px 3px 5px;
+  cursor: pointer; font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-dim); transition: all 0.2s; user-select: none;
+}
+.theme-toggle:hover { border-color: var(--accent-dim); color: var(--accent); }
+.toggle-track {
+  width: 28px; height: 16px; background: var(--rule);
+  border-radius: 8px; position: relative; transition: background 0.2s; flex-shrink: 0;
+}
+[data-theme="dark"] .toggle-track { background: var(--accent-dim); }
+.toggle-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--bg-2); transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+[data-theme="dark"] .toggle-thumb { transform: translateX(12px); }
+
+/* ═══ ARTICLE ═══ */
+.article-wrap { max-width: 760px; margin: 0 auto; padding: 48px 32px 96px; }
+
+.article-label {
+  font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 14px;
+}
+h1.article-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 36px; font-weight: 500; font-style: italic;
+  line-height: 1.2; letter-spacing: -0.01em; color: var(--ink);
+  margin-bottom: 20px;
+}
+@media (max-width: 600px) { h1.article-title { font-size: 26px; } }
+
+.article-meta {
+  display: flex; gap: 24px; flex-wrap: wrap;
+  font-size: 10px; color: var(--ink-faint); letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 32px;
+  padding-bottom: 24px; border-bottom: 1px solid var(--rule);
+}
+.article-meta .stat { display: flex; flex-direction: column; gap: 3px; }
+.article-meta .stat .k { font-size: 8px; letter-spacing: 0.2em; }
+.article-meta .stat .v { color: var(--ink); font-weight: 600; font-size: 13px; }
+.article-meta .stat .v.up { color: var(--up); }
+
+/* hero image */
+.hero-img {
+  width: 100%; height: auto; display: block;
+  border: 1px solid var(--rule);
+  margin-bottom: 36px;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+
+/* article body */
+.article-body { font-family: 'Fraunces', Georgia, serif; font-size: 17px; font-weight: 300; line-height: 1.75; color: var(--ink); }
+.article-body p { margin-bottom: 20px; }
+.article-body h2 {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent);
+  margin: 40px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+  font-weight: 500;
+}
+.article-body h3 {
+  font-family: 'Fraunces', serif; font-size: 19px; font-weight: 500;
+  font-style: italic; color: var(--ink); margin: 30px 0 12px;
+}
+.article-body h4 {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim);
+  margin: 24px 0 10px; font-weight: 500;
+}
+.article-body ul, .article-body ol {
+  margin: 0 0 20px 20px; display: flex; flex-direction: column; gap: 8px;
+}
+.article-body li { font-size: 16px; line-height: 1.65; }
+
+/* trade block */
+.trade-block {
+  background: var(--bg-2); border: 1px solid var(--rule);
+  padding: 20px 24px; margin: 28px 0;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.trade-block .tb-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 14px;
+}
+.trade-block .tb-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+}
+.trade-block .tb-cell {
+  background: var(--bg-3); padding: 10px 12px;
+}
+.trade-block .tb-cell .k {
+  font-family: 'JetBrains Mono', monospace; font-size: 8px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 3px;
+}
+.trade-block .tb-cell .v { font-size: 15px; font-weight: 600; color: var(--ink); }
+.trade-block .tb-cell .v.up { color: var(--up); }
+
+/* pnl breakdown table */
+.pnl-table { width: 100%; border-collapse: collapse; margin: 20px 0 28px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.pnl-table th { background: var(--bg-3); padding: 8px 12px; text-align: left; color: var(--ink-faint); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; border-bottom: 1px solid var(--rule); }
+.pnl-table td { padding: 9px 12px; border-bottom: 1px solid var(--rule); background: var(--bg-2); }
+.pnl-table tr:last-child td { background: var(--bg-3); font-weight: 600; }
+.pnl-table .up { color: var(--up); }
+.pnl-table .down { color: var(--down); }
+
+/* inline chart image */
+.article-img {
+  width: 100%; height: auto; display: block;
+  border: 1px solid var(--rule); margin: 28px 0;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* key takeaways */
+.takeaway-list { display: flex; flex-direction: column; gap: 12px; margin: 20px 0 28px; }
+.takeaway-item {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--bg-2); border: 1px solid var(--rule);
+  padding: 14px 16px; box-shadow: 0 1px 3px var(--shadow);
+}
+.takeaway-num {
+  font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600;
+  color: var(--accent); line-height: 1; flex-shrink: 0; min-width: 28px;
+}
+.takeaway-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; color: var(--ink-dim); }
+.takeaway-text strong { color: var(--ink); display: block; margin-bottom: 3px; font-size: 11px; letter-spacing: 0.05em; }
+
+/* disclaimer */
+.disclaimer {
+  background: var(--bg-3); border: 1px solid var(--rule);
+  padding: 20px 24px; margin: 48px 0 0;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  line-height: 1.7; color: var(--ink-faint); letter-spacing: 0.03em;
+}
+.disclaimer strong { color: var(--ink-dim); display: block; margin-bottom: 6px; letter-spacing: 0.15em; text-transform: uppercase; }
+
+/* footer */
+footer.colophon {
+  border-top: 1px solid var(--rule); padding: 20px 32px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: var(--ink-faint); letter-spacing: 0.08em;
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  max-width: 100%; background: var(--bg-2);
+}
+footer em { color: var(--accent); font-style: italic; }
+footer a { color: var(--ink-faint); text-decoration: none; }
+footer a:hover { color: var(--accent); }
+
+/* transitions */
+.trade-block, .takeaway-item, .pnl-table td, .pnl-table th,
+.site-header, footer.colophon, .disclaimer {
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="logo-link" href="/">
+      <img src="/assets/tributary-logo.png" alt="Tributary Investments">
+    </a>
+    <div class="header-nav">
+      <a href="/">Dashboard</a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <div class="toggle-track"><div class="toggle-thumb"></div></div>
+        <span id="theme-icon">☀️</span>
+        <span id="theme-label">Light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="article-wrap">
+
+  <div class="article-label">Trade Recap · Options · January 29, 2026</div>
+
+  <h1 class="article-title">Masterclass Ratio Spread Options Trade on META</h1>
+
+  <div class="article-meta">
+    <div class="stat"><div class="k">Total Return</div><div class="v up">+980.69%</div></div>
+    <div class="stat"><div class="k">Dollar Gain</div><div class="v up">+$12,661</div></div>
+    <div class="stat"><div class="k">Duration</div><div class="v">72 Days</div></div>
+    <div class="stat"><div class="k">Strategy</div><div class="v">1:2 Ratio Call Spread</div></div>
+    <div class="stat"><div class="k">Ticker</div><div class="v">META</div></div>
+  </div>
+
+  <img class="hero-img" src="/assets/trade-daily.png" alt="META trade daily chart">
+
+  <div class="trade-block">
+    <div class="tb-label">Trade Overview</div>
+    <div class="tb-grid">
+      <div class="tb-cell"><div class="k">Ticker</div><div class="v">META</div></div>
+      <div class="tb-cell"><div class="k">Strategy</div><div class="v">Call Ratio Spread 1:2</div></div>
+      <div class="tb-cell"><div class="k">Entry Date</div><div class="v">Nov 17, 2025</div></div>
+      <div class="tb-cell"><div class="k">Exit Date</div><div class="v">Jan 28, 2026</div></div>
+      <div class="tb-cell"><div class="k">Expiration</div><div class="v">Feb 20, 2026</div></div>
+      <div class="tb-cell"><div class="k">Net Credit</div><div class="v up">+$1,290</div></div>
+      <div class="tb-cell"><div class="k">Total P&amp;L</div><div class="v up">+$12,661</div></div>
+      <div class="tb-cell"><div class="k">Return</div><div class="v up">+980.69%</div></div>
+    </div>
+  </div>
+
+  <div class="article-body">
+
+    <p>This META options trade showcases an advanced ratio spread strategy executed with precision, timing, and risk management. Rather than a simple directional bet, this trade collected an initial credit of $1,290 while maintaining bullish exposure — and ultimately captured nearly $13,000 in total profit as META rallied from the low $600s toward $750. The trade was based on a previous earnings gap (window) that was "left open." The basis of the trade was that the high end of the gap at $750 would be natural resistance for the stock.</p>
+
+    <h2>Trade Structure</h2>
+    <h3>The Ratio Call Spread</h3>
+    <p>This was a 1:2 ratio call spread — a sophisticated strategy that combines income generation with directional exposure.</p>
+
+    <h4>Initial Position (November 17, 2025)</h4>
+    <ul>
+      <li>Bought: 2 contracts at $650 strike @ $35.25 = $7,050 debit</li>
+      <li>Sold: 4 contracts at $700 strike @ $20.85 = $8,340 credit</li>
+      <li>Net Credit: <strong>$1,290</strong></li>
+    </ul>
+    <p>All contracts expired February 20, 2026, giving the trade approximately three months to work.</p>
+
+    <p>A ratio spread involves buying a certain number of options while selling more options at a higher strike. In this case, the 1:2 ratio created several strategic advantages:</p>
+    <ul>
+      <li><strong>Immediate Income:</strong> The position opened for a credit — the trade started profitable</li>
+      <li><strong>Bullish Exposure:</strong> The long $650 calls provided delta and upside participation</li>
+      <li><strong>Capped Risk Below:</strong> Below $650, the position profits from time decay and the initial credit</li>
+      <li><strong>Managed Risk Above:</strong> The short $700 calls created naked exposure above that level, requiring active management</li>
+    </ul>
+
+    <h2>Position Management</h2>
+    <h3>Navigating the Rally</h3>
+    <p>When META had a gap-down sell-off, the trader took the short calls off for less than 25% of the initial credit they provided. In doing so, all upside risk was removed, turning the $1,290 credit into a debit of only $664 — while still holding two long calls into earnings the following week.</p>
+
+    <h4>Phase 1: Closing the Short Calls (January 21, 2026)</h4>
+    <p>As META gapped down toward the $600–$610 level, the opportunity arose to remove all upside roadblocks ahead of earnings.</p>
+    <ul>
+      <li>Bought back 2 contracts @ $4.87</li>
+      <li>Bought back 2 contracts @ $4.90</li>
+    </ul>
+    <p>By closing at $4.87 and $4.90 (when they were sold for $20.85), approximately $16 per contract profit was locked in on the short side — about $6,400 total.</p>
+
+    <h4>Phase 2: Riding the Long Calls (January 28, 2026)</h4>
+    <p>With the short calls closed, the position was now simply long two $650 calls with no upside risk. As META continued its surge toward $750:</p>
+    <ul>
+      <li>Sold 1 contract @ $44.26 — morning of earnings, before the print</li>
+      <li>Sold 1 contract @ $89.00 — the day after earnings</li>
+    </ul>
+
+    <img class="article-img" src="/assets/meta-risk-profile-1.png" alt="META risk profile chart">
+
+    <h2>P&amp;L Breakdown</h2>
+
+    <table class="pnl-table">
+      <thead>
+        <tr><th>Leg</th><th>Action</th><th>Contracts</th><th>Price</th><th>Amount</th><th>P&amp;L</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Short $700 calls</td><td>Sold</td><td>4</td><td>$20.85</td><td>$8,340 credit</td><td class="up">—</td></tr>
+        <tr><td>Short $700 calls</td><td>Bought back</td><td>4</td><td>~$4.88</td><td>$1,954 debit</td><td class="up">+$6,386</td></tr>
+        <tr><td>Long $650 calls</td><td>Bought</td><td>2</td><td>$35.25</td><td>$7,050 debit</td><td>—</td></tr>
+        <tr><td>Long $650 calls</td><td>Sold</td><td>2</td><td>$66.63 avg</td><td>$13,325 credit</td><td class="up">+$6,275</td></tr>
+        <tr><td colspan="5"><strong>Total Profit</strong></td><td class="up"><strong>+$12,661</strong></td></tr>
+      </tbody>
+    </table>
+
+    <h2>The Risk Management Masterclass</h2>
+    <p>This trade's success came from adapting when the original thesis evolved:</p>
+    <p><strong>Original Thesis:</strong> META rallies moderately, stays near or slightly above $700, ratio spread collects premium and modest appreciation.</p>
+    <p><strong>Actual Scenario:</strong> META is going to rally to $700, and the last-minute gap down before earnings is an opportunity to improve trade profit potential.</p>
+    <p><strong>Adaptation:</strong> Close shorts to eliminate unlimited risk, let long calls run to capture the extended move.</p>
+
+    <h2>Key Takeaways</h2>
+    <div class="takeaway-list">
+      <div class="takeaway-item"><div class="takeaway-num">1</div><div class="takeaway-text"><strong>Ratio Spreads Generate Income While Maintaining Directional Exposure</strong>This structure collected $1,290 upfront while keeping bullish participation — best of both worlds when managed properly.</div></div>
+      <div class="takeaway-item"><div class="takeaway-num">2</div><div class="takeaway-text"><strong>Know Your Exit Plan for Each Scenario</strong>The trader clearly had a plan for what to do if META surged through $700. This wasn't luck — it was preparation meeting opportunity.</div></div>
+      <div class="takeaway-item"><div class="takeaway-num">3</div><div class="takeaway-text"><strong>Risk Management Trumps Maximum Profit</strong>Buying back the short calls and converting to a small net debit might feel uncomfortable, but it eliminates risk and preserves the account.</div></div>
+      <div class="takeaway-item"><div class="takeaway-num">4</div><div class="takeaway-text"><strong>Ratio Spreads Require Active Management</strong>Unlike defined-risk spreads, ratio spreads have unlimited risk. This isn't a "set and forget" strategy — it demands monitoring and willingness to adjust.</div></div>
+      <div class="takeaway-item"><div class="takeaway-num">5</div><div class="takeaway-text"><strong>Convert Positions When Thesis Changes</strong>By closing the short calls, the trader converted a complex ratio spread into a simple long call position — adapting to market conditions rather than stubbornly sticking to the original structure.</div></div>
+      <div class="takeaway-item"><div class="takeaway-num">6</div><div class="takeaway-text"><strong>Credit Collection Provides Cushion</strong>Starting with a credit meant the trade had a buffer. Even if META had stayed flat or declined slightly, the trade would have been profitable from time decay alone.</div></div>
+      <div class="takeaway-item"><div class="takeaway-num">7</div><div class="takeaway-text"><strong>Separate Decisions by Leg</strong>The short calls were closed January 21st, the long calls held until January 28th — independent thinking about each component rather than managing everything as one unit.</div></div>
+    </div>
+
+    <h2>Conclusion</h2>
+    <p>Starting with a $1,290 credit and ending with $12,661 in total profit, this ratio spread achieved a remarkable 980% return by combining income generation, directional exposure, and above all, expert risk management.</p>
+    <p>For traders studying ratio spreads, this recap illustrates both the profit potential and the critical importance of active management. These strategies can generate impressive returns, but they demand vigilance, flexibility, and the willingness to deviate from the original plan when market conditions require it.</p>
+    <p><a href="https://shared.tradersync.com/tributaryinvestments/549fa872-c49d-11f0-9fae-0affec03c515" target="_blank" rel="noopener" style="color:var(--accent);">→ View trade executions on TraderSync</a></p>
+
+    <div class="disclaimer">
+      <strong>No Investment Advice</strong>
+      The content on this page is for informational purposes only and does not constitute legal, tax, investment, financial, or other advice. Nothing contained here constitutes a solicitation, recommendation, endorsement, or offer to buy or sell any securities. Past performance is not a guarantee or predictor of future results. There are risks associated with investing in securities, including possible loss of principal. You alone assume the sole responsibility of evaluating the merits and risks associated with the use of any information on this site.
+    </div>
+
+  </div>
+</main>
+
+<footer class="colophon">
+  <div>© Tributary Investments — <em>written by hand, priced by the market</em></div>
+  <div><a href="/">← Back to Dashboard</a></div>
+</footer>
+
+<script>
+(function() {
+  const saved = localStorage.getItem('tributary-theme') || 'light';
+  if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+})();
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  root.setAttribute('data-theme', newTheme);
+  localStorage.setItem('tributary-theme', newTheme);
+  document.getElementById('theme-icon').textContent  = newTheme === 'dark' ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = newTheme === 'dark' ? 'Dark' : 'Light';
+}
+document.addEventListener('DOMContentLoaded', function() {
+  const saved = localStorage.getItem('tributary-theme') || 'light';
+  if (saved === 'dark') {
+    document.getElementById('theme-icon').textContent  = '🌙';
+    document.getElementById('theme-label').textContent = 'Dark';
+  }
+});
+</script>
+</body>
+</html>
