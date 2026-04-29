@@ -502,6 +502,7 @@ function readFormValues(t) {
     catalysts:  v(t+'-catalysts'),
     keyMetrics:  v(t+'-keyMetrics'),
     baseThesis:  v(t+'-baseThesis'),
+    xposts:      (document.getElementById(t+'-xposts')?.value||'').split('\n').map(u=>u.trim()).filter(Boolean).join(','),
     charts:      v(t+'-charts'),
   };
 }
