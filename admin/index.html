@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -7,13 +7,29 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
+  --bg:#f7f5f0; --bg2:#ffffff; --bg3:#edeae3;
+  --ink:#1a1a16; --dim:#6b6860; --faint:#a8a49a; --rule:#dbd8d0;
+  --gold:#b5812a; --golddim:#d4a04a;
+  --up:#3a7d2e; --down:#b03228; --hold:#b5812a;
+  --shadow:rgba(0,0,0,0.06);
+}
+[data-theme="dark"] {
   --bg:#0e0f0c; --bg2:#161813; --bg3:#1e2019;
   --ink:#eae5d6; --dim:#8a8778; --faint:#4a4940; --rule:#2a2c24;
   --gold:#d4a04a; --golddim:#8a6a32;
   --up:#7fb069; --down:#c05746; --hold:#d4a04a;
+  --shadow:rgba(0,0,0,0.3);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13px;min-height:100vh;}
+html,body{background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:16px;min-height:100vh;transition:background 0.25s,color 0.25s;}
+
+/* theme toggle */
+.theme-toggle{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--rule);border-radius:20px;padding:4px 12px 4px 6px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);transition:all 0.2s;user-select:none;}
+.theme-toggle:hover{border-color:var(--golddim);color:var(--gold);}
+.toggle-track{width:30px;height:17px;background:var(--rule);border-radius:9px;position:relative;transition:background 0.2s;flex-shrink:0;}
+[data-theme="dark"] .toggle-track{background:var(--golddim);}
+.toggle-thumb{position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--bg2);transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+[data-theme="dark"] .toggle-thumb{transform:translateX(13px);}
 
 /* ── LOCK SCREEN ── */
 #lock{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;}
@@ -30,21 +46,21 @@ html,body{background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',mon
 
 /* ── HEADER ── */
 header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid var(--rule);margin-bottom:28px;gap:16px;flex-wrap:wrap;}
-.brand .eyebrow{font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);}
-.brand h1{font-family:'Fraunces',serif;font-size:28px;font-weight:400;font-style:italic;}
+.brand .eyebrow{font-size:12px;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);}
+.brand h1{font-family:'Fraunces',serif;font-size:34px;font-weight:400;font-style:italic;}
 .brand h1 em{font-style:normal;font-weight:600;}
 .header-actions{display:flex;gap:10px;align-items:center;}
-#status-msg{font-size:10px;color:var(--faint);letter-spacing:0.1em;}
+#status-msg{font-size:12px;color:var(--faint);letter-spacing:0.1em;}
 #status-msg.ok{color:var(--up);}
 #status-msg.err{color:var(--down);}
 #status-msg.saving{color:var(--gold);}
 
 /* ── TICKER TABS ── */
 .ticker-tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);margin-bottom:24px;flex-wrap:wrap;}
-.ttab{padding:8px 16px;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;color:var(--faint);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;}
+.ttab{padding:10px 18px;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;color:var(--faint);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;}
 .ttab:hover{color:var(--dim);}
 .ttab.active{color:var(--gold);border-bottom-color:var(--gold);}
-.ttab .badge{font-size:8px;padding:1px 5px;border:1px solid;margin-left:5px;vertical-align:middle;}
+.ttab .badge{font-size:10px;padding:1px 5px;border:1px solid;margin-left:5px;vertical-align:middle;}
 .ttab .badge.BULL,.ttab .badge.BUY{color:var(--up);border-color:var(--up);}
 .ttab .badge.BEAR,.ttab .badge.SELL{color:var(--down);border-color:var(--down);}
 .ttab .badge.HOLD,.ttab .badge.NEUTRAL,.ttab .badge.WATCH{color:var(--hold);border-color:var(--hold);}
@@ -55,9 +71,9 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
 
 .panel-header{display:flex;align-items:baseline;gap:16px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--rule);}
 .panel-header .sym{font-family:'Fraunces',serif;font-size:28px;font-weight:600;}
-.panel-header .co-name{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;}
-.panel-header .price-info{margin-left:auto;text-align:right;font-size:11px;}
-.panel-header .price{font-size:20px;font-weight:500;}
+.panel-header .co-name{font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;}
+.panel-header .price-info{margin-left:auto;text-align:right;font-size:13px;}
+.panel-header .price{font-size:26px;font-weight:500;}
 .panel-header .chg.up{color:var(--up);}
 .panel-header .chg.dn{color:var(--down);}
 
@@ -65,32 +81,32 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
 @media(max-width:700px){.form-grid{grid-template-columns:1fr;}}
 .full{grid-column:1/-1;}
 .field{display:flex;flex-direction:column;gap:6px;}
-.field label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--faint);}
+.field label{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--faint);}
 .field input,.field textarea,.field select{
   background:var(--bg3);border:1px solid var(--rule);color:var(--ink);
-  font-family:'JetBrains Mono',monospace;font-size:12px;
-  padding:9px 11px;outline:none;width:100%;resize:vertical;
+  font-family:'JetBrains Mono',monospace;font-size:15px;
+  padding:11px 13px;outline:none;width:100%;resize:vertical;
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--golddim);}
 .field select option{background:var(--bg3);}
-.field .hint{font-size:9px;color:var(--faint);margin-top:3px;}
+.field .hint{font-size:11px;color:var(--faint);margin-top:3px;}
 
 /* scenario row */
 .scenario-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);}
 .scenario-cell{background:var(--bg2);padding:12px;}
-.scenario-cell .s-label{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px;}
+.scenario-cell .s-label{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px;}
 .scenario-cell.bull .s-label{color:var(--up);}
 .scenario-cell.base .s-label{color:var(--gold);}
 .scenario-cell.bear .s-label{color:var(--down);}
-.scenario-cell input{background:var(--bg);border:1px solid var(--rule);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13px;padding:7px 9px;outline:none;width:100%;}
+.scenario-cell input{background:var(--bg);border:1px solid var(--rule);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:16px;padding:7px 9px;outline:none;width:100%;}
 .scenario-cell input:focus{border-color:var(--golddim);}
-.scenario-cell textarea{background:var(--bg);border:1px solid var(--rule);color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;padding:7px 9px;outline:none;width:100%;resize:vertical;margin-top:6px;font-style:italic;}
+.scenario-cell textarea{background:var(--bg);border:1px solid var(--rule);color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:14px;padding:7px 9px;outline:none;width:100%;resize:vertical;margin-top:6px;font-style:italic;}
 .scenario-cell textarea:focus{border-color:var(--golddim);}
 
-.section-divider{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--faint);padding:14px 0 8px;border-bottom:1px solid var(--rule);margin-bottom:14px;}
+.section-divider{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--faint);padding:14px 0 8px;border-bottom:1px solid var(--rule);margin-bottom:14px;}
 
 /* ── BUTTONS ── */
-.btn{background:transparent;border:1px solid var(--rule);color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:10px;padding:9px 18px;cursor:pointer;letter-spacing:0.15em;text-transform:uppercase;transition:all 0.2s;}
+.btn{background:transparent;border:1px solid var(--rule);color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:12px;padding:10px 20px;cursor:pointer;letter-spacing:0.15em;text-transform:uppercase;transition:all 0.2s;}
 .btn:hover{border-color:var(--dim);color:var(--ink);}
 .btn.primary{background:var(--golddim);border-color:var(--gold);color:var(--ink);}
 .btn.primary:hover{background:var(--gold);color:var(--bg);}
@@ -101,7 +117,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
 .action-bar{display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--rule);align-items:center;flex-wrap:wrap;}
 
 /* ── PUBLISH LOG ── */
-#publish-log{display:none;background:var(--bg2);border:1px solid var(--rule);padding:14px;margin-top:16px;font-size:11px;color:var(--dim);line-height:1.8;}
+#publish-log{display:none;background:var(--bg2);border:1px solid var(--rule);padding:14px;margin-top:16px;font-size:13px;color:var(--dim);line-height:1.8;}
 #publish-log.open{display:block;}
 #publish-log .log-line.ok{color:var(--up);}
 #publish-log .log-line.err{color:var(--down);}
@@ -120,7 +136,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
 .screenshot-item img { width: 140px; height: 90px; object-fit: cover; object-position: top; border: 1px solid var(--rule); display: block; cursor: pointer; transition: all 0.2s; }
 .screenshot-item img:hover { border-color: var(--golddim); }
 .screenshot-item .ss-remove { position: absolute; top: -6px; right: -6px; background: var(--down); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; padding: 0; }
-.screenshot-item .ss-label { font-size: 9px; color: var(--faint); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.screenshot-item .ss-label { font-size: 11px; color: var(--faint); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* lightbox */
 #ss-lightbox { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.92); align-items:center; justify-content:center; }
 #ss-lightbox.open { display:flex; }
@@ -178,6 +194,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
     </div>
     <div class="header-actions">
       <span id="status-msg"></span>
+      <button class="theme-toggle" onclick="toggleAdminTheme()"><div class="toggle-track"><div class="toggle-thumb"></div></div><span id="admin-theme-icon">☀️</span><span id="admin-theme-label">Light</span></button>
       <a href="https://docs.google.com/spreadsheets/d/1e5MLi-lQGqHbmLcOce3K0WfjNsPW5B9Gk7yHI6R_Y48" target="_blank" class="btn" style="text-decoration:none;">📊 Google Sheet</a>
       <button class="btn" onclick="saveAllToSheets()">💾 Save All to Sheets</button>
       <button class="btn" onclick="showReorder()" id="reorder-btn">⇅ Reorder</button>
@@ -440,9 +457,13 @@ function buildPanel(t) {
 
   <div class="section-divider" style="margin-top:16px;">Charts &amp; Screenshots</div>
   <div class="field full">
-    <label>Image URLs <span style="font-weight:400;color:var(--faint);font-size:10px">(one per line — upload via WP Media, paste URL here)</span></label>
-    <textarea id="${t}-charts" rows="3" placeholder="https://tributaryinvestments.com/wp-content/uploads/2026/04/chart.jpg">${d.charts ? d.charts.split(',').map(u=>u.trim()).filter(Boolean).join('\n') : ''}</textarea>
-    <div id="ss-grid-${t}" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;"></div>
+    <div id="ss-grid-${t}" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
+    <label class="ss-upload-btn" style="display:inline-flex;align-items:center;gap:8px;background:var(--bg3);border:1px dashed var(--golddim);color:var(--gold);padding:10px 20px;cursor:pointer;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;transition:all 0.2s;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='var(--bg3)'">
+      <span style="font-size:18px;line-height:1;">+</span> Upload Chart Image
+      <input type="file" accept="image/*" style="display:none" onchange="adminUploadChart('${t}', this)">
+    </label>
+    <div id="ss-status-${t}" style="font-size:12px;color:var(--dim);margin-top:8px;display:none;"></div>
+    <input type="hidden" id="${t}-charts" value="${d.charts || ''}">
   </div>
 
   <div class="action-bar">
@@ -507,7 +528,7 @@ async function writeRowToSheets(t, data) {
     data.bullTarget, data.baseTarget, data.bearTarget,
     data.bullThesis, data.bearThesis,
     data.focus, data.catalysts, data.keyMetrics,
-    (data.charts || '').split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')).join(','),
+    (data.charts || '').split(',').map(u=>u.trim()).filter(u=>u.length>0).join(','),
     data.baseThesis,
   ];
 
@@ -611,18 +632,98 @@ function setStatus(msg, cls) {
 }
 /* ── CHART PREVIEWS ── */
 function renderChartPreviews(t) {
-  const textarea = document.getElementById(t+'-charts');
+  const input = document.getElementById(t+'-charts');
   const grid = document.getElementById('ss-grid-'+t);
-  if (!textarea || !grid) return;
-  const urls = textarea.value.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http'));
+  if (!input || !grid) return;
+  const urls = (input.value || '').split(',').map(u=>u.trim()).filter(u=>u.length > 0);
   grid.innerHTML = urls.map(url => `
     <div class="screenshot-item">
-      <img src="${url}" onclick="openSsLightbox('${url}')" onerror="this.style.opacity=0.3;this.title='Failed to load'">
-      <div class="ss-label" style="font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url.split('/').pop()}</div>
-    </div>`).join('') || '<div style="font-size:10px;color:var(--faint);padding:6px 0;">No charts yet — paste URLs above</div>';
-  // Live update on textarea change
-  textarea.oninput = () => renderChartPreviews(t);
+      <img src="${url}" onclick="openSsLightbox('${url}')" onerror="this.style.opacity=0.3;this.title='Failed to load'" style="width:140px;height:90px;object-fit:cover;object-position:top;border:1px solid var(--rule);display:block;cursor:pointer;">
+      <button class="ss-remove" onclick="removeChart('${t}','${url}')" title="Remove">×</button>
+      <div class="ss-label">${url.split('/').pop()}</div>
+    </div>`).join('') || '';
 }
+
+function removeChart(t, url) {
+  const input = document.getElementById(t+'-charts');
+  if (!input) return;
+  const urls = (input.value || '').split(',').map(u=>u.trim()).filter(u=>u && u !== url);
+  input.value = urls.join(',');
+  renderChartPreviews(t);
+}
+
+async function adminUploadChart(t, inputEl) {
+  const file = inputEl.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('ss-status-'+t);
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--dim)';
+  statusEl.textContent = 'Uploading...';
+
+  let token = localStorage.getItem('gh_token') || '';
+  if (!token) {
+    token = prompt('Enter your GitHub token to enable chart uploads (stored locally only):');
+    if (!token) { statusEl.style.display='none'; inputEl.value=''; return; }
+    localStorage.setItem('gh_token', token.trim());
+  }
+
+  try {
+    const base64 = await new Promise((resolve,reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g,'-').toLowerCase();
+    const ghPath = `assets/charts/${t.toLowerCase()}-${cleanName}`;
+    const GH_REPO = 'tributaryinvestments/tributary-site';
+
+    let sha = null;
+    try {
+      const check = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${ghPath}`,
+        {headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+      if (check.ok) { const ex = await check.json(); sha = ex.sha; }
+    } catch(e){}
+
+    const body = {message:`Add chart: ${t} — ${file.name}`,content:base64,branch:'main'};
+    if (sha) body.sha = sha;
+
+    const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${ghPath}`, {
+      method:'PUT',
+      headers:{'Authorization':`token ${token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      body:JSON.stringify(body)
+    });
+
+    if (!res.ok) { const err = await res.json(); throw new Error(err.message||'Upload failed'); }
+
+    const imgUrl = '/'+ghPath;
+    const chartsInput = document.getElementById(t+'-charts');
+    const existing = (chartsInput.value||'').split(',').map(u=>u.trim()).filter(Boolean);
+    existing.push(imgUrl);
+    chartsInput.value = existing.join(',');
+    renderChartPreviews(t);
+
+    statusEl.style.color = 'var(--up)';
+    statusEl.textContent = '✓ Uploaded! Save to Sheets to persist.';
+    setTimeout(()=>{statusEl.style.display='none';},4000);
+    inputEl.value='';
+  } catch(e) {
+    statusEl.style.color = 'var(--down)';
+    statusEl.textContent = '✗ '+e.message;
+  }
+}
+
+function toggleAdminTheme() {
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  root.setAttribute('data-theme', newTheme);
+  localStorage.setItem('tributary-theme', newTheme);
+  document.getElementById('admin-theme-icon').textContent = newTheme==='dark'?'🌙':'☀️';
+  document.getElementById('admin-theme-label').textContent = newTheme==='dark'?'Dark':'Light';
+}
+
 
 function openSsLightbox(src) {
   document.getElementById('ss-lightbox-img').src = src;
@@ -829,6 +930,19 @@ async function triggerPublish() {
   );
 }
 
+</script>
+
+<script>
+(function(){
+  const saved = localStorage.getItem('tributary-theme')||'light';
+  if(saved==='dark'){
+    document.documentElement.setAttribute('data-theme','dark');
+    const icon=document.getElementById('admin-theme-icon');
+    const label=document.getElementById('admin-theme-label');
+    if(icon) icon.textContent='🌙';
+    if(label) label.textContent='Dark';
+  }
+})();
 </script>
 </body>
 </html>
