@@ -195,6 +195,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
     <div class="header-actions">
       <span id="status-msg"></span>
       <button class="theme-toggle" onclick="toggleAdminTheme()"><div class="toggle-track"><div class="toggle-thumb"></div></div><span id="admin-theme-icon">☀️</span><span id="admin-theme-label">Light</span></button>
+      <button class="btn" onclick="resetGhToken()" title="Reset GitHub upload token">🔑 Reset Token</button>
       <a href="https://docs.google.com/spreadsheets/d/1e5MLi-lQGqHbmLcOce3K0WfjNsPW5B9Gk7yHI6R_Y48" target="_blank" class="btn" style="text-decoration:none;">📊 Google Sheet</a>
       <button class="btn" onclick="saveAllToSheets()">💾 Save All to Sheets</button>
       <button class="btn" onclick="showReorder()" id="reorder-btn">⇅ Reorder</button>
@@ -712,6 +713,15 @@ async function adminUploadChart(t, inputEl) {
   } catch(e) {
     statusEl.style.color = 'var(--down)';
     statusEl.textContent = '✗ '+e.message;
+  }
+}
+
+function resetGhToken() {
+  localStorage.removeItem('gh_token');
+  const token = prompt('Enter new GitHub token (repo scope required):');
+  if (token) {
+    localStorage.setItem('gh_token', token.trim());
+    alert('✓ Token saved! You can now upload charts.');
   }
 }
 
