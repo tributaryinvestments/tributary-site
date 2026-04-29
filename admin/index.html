@@ -697,7 +697,8 @@ async function adminUploadChart(t, inputEl) {
 
     if (!res.ok) { const err = await res.json(); throw new Error(err.message||'Upload failed'); }
 
-    const imgUrl = '/'+ghPath;
+    // Use full URL so image loads immediately from GitHub's CDN
+    const imgUrl = `https://raw.githubusercontent.com/${GH_REPO}/main/${ghPath}`;
     const chartsInput = document.getElementById(t+'-charts');
     const existing = (chartsInput.value||'').split(',').map(u=>u.trim()).filter(Boolean);
     existing.push(imgUrl);
@@ -705,8 +706,8 @@ async function adminUploadChart(t, inputEl) {
     renderChartPreviews(t);
 
     statusEl.style.color = 'var(--up)';
-    statusEl.textContent = '✓ Uploaded! Save to Sheets to persist.';
-    setTimeout(()=>{statusEl.style.display='none';},4000);
+    statusEl.textContent = '✓ Uploaded! Save to Sheets, then Rebuild & Publish to make it live on the dashboard.';
+    setTimeout(()=>{statusEl.style.display='none';},6000);
     inputEl.value='';
   } catch(e) {
     statusEl.style.color = 'var(--down)';
