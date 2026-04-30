@@ -334,6 +334,8 @@ async function loadIntelFromSheets() {
     const cv = (i) => (c[i] && c[i].v != null) ? String(c[i].v).trim() : '';
     const t = cv(0).toUpperCase();
     if (!t || t === 'TICKER') continue;
+    // Auto-add new tickers found in sheet that aren't in TICKERS yet
+    if (!TICKERS.includes(t)) TICKERS.push(t);
     intel[t] = {
       ticker: t, date: cv(1), sentiment: cv(2).toUpperCase() || 'WATCH',
       conviction: cv(3).replace('.0',''), target: cv(4).replace('.0',''),
