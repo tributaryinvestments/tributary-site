@@ -149,6 +149,15 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
 #reorder-panel { display: none; }
 #reorder-panel.active { display: block; }
 .reorder-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.reorder-columns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 4px; }
+.reorder-col { display: flex; flex-direction: column; gap: 0; }
+.reorder-col-header { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; padding: 8px 12px; margin-bottom: 8px; border-bottom: 2px solid; }
+.reorder-col-header.BULL  { color: var(--up);   border-color: var(--up); }
+.reorder-col-header.BEAR  { color: var(--down); border-color: var(--down); }
+.reorder-col-header.WATCH { color: var(--faint); border-color: var(--rule); }
+.reorder-col-header.HOLD  { color: #a07c3a; border-color: #a07c3a; }
+.reorder-col-items { min-height: 60px; display: flex; flex-direction: column; gap: 4px; padding: 4px; border: 1px dashed var(--rule); border-radius: 2px; }
+.reorder-col-items.drag-over-col { border-color: var(--gold); background: rgba(201,163,78,0.04); }
 .reorder-list { list-style: none; margin: 0; padding: 0; max-width: 640px; }
 .reorder-item {
   display: flex; align-items: center; gap: 16px;
@@ -220,7 +229,10 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
         <button class="btn" onclick="hideReorder()" style="opacity:0.6">✕ Close</button>
       </div>
     </div>
-    <ol class="reorder-list" id="reorder-list"></ol>
+    <div class="reorder-columns" id="reorder-columns">
+      <!-- Built dynamically by renderReorderColumns() -->
+    </div>
+    <ol class="reorder-list" id="reorder-list" style="display:none;"></ol>
     <div class="reorder-info">After saving, the dashboard will rebuild automatically (takes ~10 seconds).</div>
   </div>
 
@@ -777,32 +789,56 @@ function hideReorder() {
   document.getElementById('reorder-btn').style.opacity = '1';
 }
 
+// reorderGroups: { BULL: ['AAPL',...], WATCH: [...], HOLD: [...], BEAR: [...] }
+let reorderGroups = { BULL: [], WATCH: [], HOLD: [], BEAR: [] };
+
 function buildReorderList() {
-  reorderOrder = [...TICKERS]; // copy current order
-  renderReorderList();
+  reorderOrder = [...TICKERS];
+  // Split into groups by sentiment
+  reorderGroups = { BULL: [], WATCH: [], HOLD: [], BEAR: [] };
+  reorderOrder.forEach(t => {
+    const s = (intel[t]?.sentiment || 'WATCH').toUpperCase();
+    const key = reorderGroups[s] !== undefined ? s : 'WATCH';
+    reorderGroups[key].push(t);
+  });
+  renderReorderColumns();
 }
 
-function renderReorderList() {
-  const list = document.getElementById('reorder-list');
-  list.innerHTML = reorderOrder.map((t, i) => {
-    const d = intel[t] || {};
-    const s = d.sentiment || 'WATCH';
-    const thesis = (d.thesis || '').slice(0, 80);
-    const conv = d.conviction ? `Conv: ${d.conviction}` : '';
-    const target = d.target ? `Target: $${d.target}` : '';
-    return `
-<li class="reorder-item" draggable="true" data-ticker="${t}"
-    ondragstart="onDragStart(event)" ondragover="onDragOver(event)"
-    ondrop="onDrop(event)" ondragend="onDragEnd(event)"
-    ondragleave="onDragLeave(event)">
-  <span class="reorder-handle">⠿</span>
-  <span class="reorder-num">${i + 1}</span>
-  <span class="reorder-ticker">${t}</span>
-  <span class="badge ${s} reorder-badge">${s}</span>
-  <span class="reorder-meta">${[conv, target, thesis].filter(Boolean).join(' · ')}</span>
-</li>`;
+function renderReorderColumns() {
+  const container = document.getElementById('reorder-columns');
+  const sentiments = ['BULL', 'WATCH', 'HOLD', 'BEAR'];
+  container.innerHTML = sentiments.map(s => {
+    const items = reorderGroups[s] || [];
+    return `<div class="reorder-col" data-sentiment="${s}">
+      <div class="reorder-col-header ${s}">${s} <span style="font-weight:400;opacity:0.6;">(${items.length})</span></div>
+      <div class="reorder-col-items" id="col-items-${s}"
+           ondragover="onColDragOver(event,'${s}')"
+           ondrop="onColDrop(event,'${s}')"
+           ondragleave="onColDragLeave(event,'${s}')">
+        ${items.map((t, i) => buildReorderItem(t, s, i)).join('')}
+      </div>
+    </div>`;
   }).join('');
 }
+
+function buildReorderItem(t, sentiment, i) {
+  const d = intel[t] || {};
+  const conv = d.conviction ? `Conv: ${d.conviction}` : '';
+  const target = d.target ? `$${d.target}` : '';
+  return `<li class="reorder-item" draggable="true" data-ticker="${t}" data-sentiment="${sentiment}"
+    ondragstart="onDragStart(event)"
+    ondragover="onItemDragOver(event)"
+    ondrop="onItemDrop(event)"
+    ondragend="onDragEnd(event)"
+    ondragleave="e => e.currentTarget.classList.remove('drag-over')">
+    <span class="reorder-handle">⠿</span>
+    <span class="reorder-num">${i+1}</span>
+    <span class="reorder-ticker">${t}</span>
+    <span class="reorder-meta">${[conv, target].filter(Boolean).join(' · ')}</span>
+  </li>`;
+}
+
+function renderReorderList() { renderReorderColumns(); }
 
 function onDragStart(e) {
   dragSrc = e.currentTarget;
@@ -811,40 +847,66 @@ function onDragStart(e) {
   e.dataTransfer.setData('text/plain', dragSrc.dataset.ticker);
 }
 
-function onDragOver(e) {
+function onItemDragOver(e) {
   e.preventDefault();
+  e.stopPropagation();
   e.dataTransfer.dropEffect = 'move';
-  const target = e.currentTarget;
-  if (target !== dragSrc) target.classList.add('drag-over');
+  if (e.currentTarget !== dragSrc) e.currentTarget.classList.add('drag-over');
 }
 
-function onDragLeave(e) {
-  e.currentTarget.classList.remove('drag-over');
-}
-
-function onDrop(e) {
+function onItemDrop(e) {
   e.preventDefault();
+  e.stopPropagation();
   const target = e.currentTarget;
   target.classList.remove('drag-over');
   if (target === dragSrc) return;
-
   const fromTicker = dragSrc.dataset.ticker;
-  const toTicker   = target.dataset.ticker;
-  const fromIdx = reorderOrder.indexOf(fromTicker);
-  const toIdx   = reorderOrder.indexOf(toTicker);
+  const toTicker = target.dataset.ticker;
+  const toSentiment = target.dataset.sentiment;
+  // Move within or between groups
+  const fromSentiment = dragSrc.dataset.sentiment;
+  reorderGroups[fromSentiment] = reorderGroups[fromSentiment].filter(t => t !== fromTicker);
+  // Update intel sentiment if moving between groups
+  if (fromSentiment !== toSentiment) {
+    if (intel[fromTicker]) intel[fromTicker].sentiment = toSentiment;
+  }
+  const toIdx = reorderGroups[toSentiment].indexOf(toTicker);
+  reorderGroups[toSentiment].splice(toIdx, 0, fromTicker);
+  renderReorderColumns();
+}
 
-  // Remove from old position, insert at new position
-  reorderOrder.splice(fromIdx, 1);
-  reorderOrder.splice(toIdx, 0, fromTicker);
-  renderReorderList();
+function onColDragOver(e, sentiment) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.getElementById('col-items-' + sentiment).classList.add('drag-over-col');
+}
+
+function onColDragLeave(e, sentiment) {
+  document.getElementById('col-items-' + sentiment).classList.remove('drag-over-col');
+}
+
+function onColDrop(e, sentiment) {
+  e.preventDefault();
+  document.getElementById('col-items-' + sentiment).classList.remove('drag-over-col');
+  if (!dragSrc) return;
+  const fromTicker = dragSrc.dataset.ticker;
+  const fromSentiment = dragSrc.dataset.sentiment;
+  if (fromSentiment === sentiment && reorderGroups[sentiment].includes(fromTicker)) return;
+  reorderGroups[fromSentiment] = reorderGroups[fromSentiment].filter(t => t !== fromTicker);
+  if (intel[fromTicker]) intel[fromTicker].sentiment = sentiment;
+  reorderGroups[sentiment].push(fromTicker);
+  renderReorderColumns();
 }
 
 function onDragEnd(e) {
-  document.querySelectorAll('.reorder-item').forEach(el => {
-    el.classList.remove('dragging', 'drag-over');
-  });
+  document.querySelectorAll('.reorder-item').forEach(el => el.classList.remove('dragging', 'drag-over'));
+  document.querySelectorAll('.reorder-col-items').forEach(el => el.classList.remove('drag-over-col'));
   dragSrc = null;
 }
+
+function onDragOver(e) { e.preventDefault(); }
+function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function onDrop(e) {}
 
 async function saveOrder() {
   const btn = document.getElementById('save-order-btn');
@@ -911,8 +973,16 @@ async function saveOrder() {
     if (!writeRes.ok) throw new Error('Sheets write failed: ' + writeRes.status);
 
     // 4. Update TICKERS order in memory
+    // Rebuild TICKERS from groups in order BULL > WATCH > HOLD > BEAR
     TICKERS.length = 0;
-    reorderOrder.forEach(t => TICKERS.push(t));
+    ['BULL','WATCH','HOLD','BEAR'].forEach(s => {
+      (reorderGroups[s] || []).forEach(t => {
+        TICKERS.push(t);
+        // Update sentiment in intel
+        if (intel[t]) intel[t].sentiment = s;
+      });
+    });
+    reorderOrder = [...TICKERS];
     renderTabs();
 
     // 5. Trigger dashboard publish
