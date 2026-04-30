@@ -458,8 +458,8 @@ function buildPanel(t) {
 
   <div class="section-divider" style="margin-top:16px;">X / Twitter Posts</div>
   <div class="field full">
-    <label>X Post URLs <span class="hint">(one per line — paste your x.com post links mentioning this stock)</span></label>
-    <textarea id="${t}-xposts" rows="4" placeholder="https://x.com/tributarytrades/status/123456789&#10;https://x.com/tributarytrades/status/987654321">${d.xposts ? d.xposts.split(',').map(u=>u.trim()).filter(Boolean).join('\n') : ''}</textarea>
+    <label>X Posts <span class="hint">(one per line — paste x.com post URLs, they will embed natively on the card)</span></label>
+    <textarea id="${t}-xposts" rows="4" placeholder="https://x.com/TributaryTrades/status/2049597636400066897">${d.xposts ? d.xposts.split(',').map(u=>u.trim()).filter(Boolean).join('\n') : ''}</textarea>
   </div>
 
   <div class="section-divider" style="margin-top:16px;">Charts &amp; Screenshots</div>
