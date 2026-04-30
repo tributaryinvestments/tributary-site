@@ -415,17 +415,17 @@ function buildPanel(t) {
     <div class="scenario-cell bull">
       <div class="s-label">Bull Case</div>
       <input type="text" id="${t}-bullTarget" value="${d.bullTarget}" placeholder="Target price">
-      <textarea id="${t}-bullThesis" rows="3" placeholder="What needs to happen…">${d.bullThesis}</textarea>
+      <textarea id="${t}-bullThesis" rows="5" placeholder="What needs to happen… (line breaks preserved)">${d.bullThesis}</textarea>
     </div>
     <div class="scenario-cell base">
       <div class="s-label">Base Case</div>
       <input type="text" id="${t}-baseTarget" value="${d.baseTarget}" placeholder="Target price">
-      <textarea id="${t}-baseThesis" rows="3" placeholder="Base case description…">${d.baseThesis||''}</textarea>
+      <textarea id="${t}-baseThesis" rows="5" placeholder="Base case description… (line breaks preserved)">${d.baseThesis||''}</textarea>
     </div>
     <div class="scenario-cell bear">
       <div class="s-label">Bear Case</div>
       <input type="text" id="${t}-bearTarget" value="${d.bearTarget}" placeholder="Target price">
-      <textarea id="${t}-bearThesis" rows="3" placeholder="What breaks the thesis…">${d.bearThesis}</textarea>
+      <textarea id="${t}-bearThesis" rows="5" placeholder="What breaks the thesis… (line breaks preserved)">${d.bearThesis}</textarea>
     </div>
   </div>
 
@@ -433,11 +433,11 @@ function buildPanel(t) {
   <div class="form-grid">
     <div class="field full">
       <label>Thesis</label>
-      <textarea id="${t}-thesis" rows="4" placeholder="Your investment thesis…">${d.thesis}</textarea>
+      <textarea id="${t}-thesis" rows="6" placeholder="Your investment thesis… (line breaks preserved)">${d.thesis}</textarea>
     </div>
     <div class="field full">
       <label>Key Risks</label>
-      <textarea id="${t}-risks" rows="3" placeholder="Key risks to monitor…">${d.risks}</textarea>
+      <textarea id="${t}-risks" rows="5" placeholder="Key risks to monitor… (line breaks preserved)">${d.risks}</textarea>
     </div>
     <div class="field full">
       <label>Notes</label>
