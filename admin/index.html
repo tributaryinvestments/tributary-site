@@ -252,6 +252,24 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
     <div class="reorder-info">After saving, the dashboard will rebuild automatically (takes ~10 seconds).</div>
   </div>
 
+  <!-- SENTIMENT MANAGER PANEL -->
+  <div id="sentiment-panel" style="display:none;">
+    <div class="reorder-header">
+      <div>
+        <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--faint);margin-bottom:4px;">Configure</div>
+        <h2 style="margin:0;font-size:22px;">Sentiment Labels</h2>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn primary" onclick="saveSentiments()">&#x1F4BE; Save Sentiments</button>
+        <button class="btn" onclick="hideSentimentManager()" style="opacity:0.6">&times; Close</button>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--faint);margin-bottom:16px;">Drag to reorder how sections appear on the dashboard. Built-in labels cannot be deleted but can be renamed and recolored.</p>
+    <div class="sentiment-manager-grid" id="sentiment-manager-list"></div>
+    <button class="btn sentiment-add-btn" onclick="addCustomSentiment()">+ Add Custom Label</button>
+    <p class="reorder-info" style="margin-top:16px;">Changes apply on next Rebuild &amp; Publish.</p>
+  </div>
+
   <div id="publish-log"></div>
 </div>
 
@@ -421,7 +439,7 @@ function buildPanel(t) {
     <div class="field">
       <label>Sentiment</label>
       <select id="${t}-sentiment">
-        ${SENTIMENTS.map(s=>`<option value="${s.key}" ${(d.sentiment||'BULL').toUpperCase()===s.key?'selected':''}>${s.label}</option>`).join('')}
+        ${(typeof SENTIMENTS!=='undefined'?SENTIMENTS:[{key:'BULL',label:'BULL'},{key:'BEAR',label:'BEAR'},{key:'HOLD',label:'HOLD'},{key:'WATCH',label:'WATCH'},{key:'WISHLIST',label:'WISHLIST'}]).map(s=>`<option value="${s.key}" ${(d.sentiment||'BULL').toUpperCase()===s.key?'selected':''}>${s.label}</option>`).join('')}
       </select>
     </div>
     <div class="field">
