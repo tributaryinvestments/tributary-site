@@ -117,6 +117,21 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
 
 .action-bar{display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--rule);align-items:center;flex-wrap:wrap;}
 
+/* ── SENTIMENT MANAGER ── */
+#sentiment-panel { display:none; }
+#sentiment-panel.active { display:block; }
+.sentiment-manager-grid { display:flex; flex-direction:column; gap:8px; max-width:700px; }
+.sentiment-row { display:grid; grid-template-columns:32px 1fr 140px 80px 40px; gap:10px; align-items:center; padding:10px 12px; border:1px solid var(--rule); background:var(--bg-2); }
+.sentiment-row.drag-over { border-color:var(--gold); }
+.sentiment-drag-handle { color:var(--faint); cursor:grab; font-size:16px; }
+.sentiment-name-input { font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; border:none; background:transparent; color:var(--ink); border-bottom:1px solid var(--rule); padding:2px 4px; width:100%; }
+.sentiment-name-input:focus { outline:none; border-bottom-color:var(--gold); }
+.sentiment-color-pick { width:100%; height:32px; border:1px solid var(--rule); cursor:pointer; background:none; padding:2px; }
+.sentiment-badge-preview { font-size:11px; font-weight:700; padding:3px 8px; border:2px solid; letter-spacing:0.12em; text-align:center; }
+.sentiment-del-btn { background:none; border:none; color:var(--faint); cursor:pointer; font-size:16px; }
+.sentiment-del-btn:hover { color:#e05050; }
+.sentiment-add-btn { margin-top:8px; }
+.sentiment-locked { font-size:9px; color:var(--faint); letter-spacing:0.1em; text-transform:uppercase; }
 /* ── PUBLISH LOG ── */
 #publish-log{display:none;background:var(--bg2);border:1px solid var(--rule);padding:14px;margin-top:16px;font-size:13px;color:var(--dim);line-height:1.8;}
 #publish-log.open{display:block;}
@@ -209,6 +224,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;padding-b
       <a href="https://docs.google.com/spreadsheets/d/1e5MLi-lQGqHbmLcOce3K0WfjNsPW5B9Gk7yHI6R_Y48" target="_blank" class="btn" style="text-decoration:none;">📊 Google Sheet</a>
       <button class="btn" onclick="saveAllToSheets()">💾 Save All to Sheets</button>
       <button class="btn" onclick="showReorder()" id="reorder-btn">⇅ Reorder</button>
+      <button class="btn" onclick="showSentimentManager()" id="sentiment-mgr-btn">🎨 Sentiments</button>
       <button class="btn publish" onclick="publishDashboard()">🚀 Rebuild &amp; Publish</button>
     </div>
   </header>
@@ -298,6 +314,7 @@ async function initEditor() {
   }
   renderTabs();
   renderEditors();
+  buildSentimentDropdowns();
   switchTab(TICKERS[0]);
 }
 
@@ -404,10 +421,7 @@ function buildPanel(t) {
     <div class="field">
       <label>Sentiment</label>
       <select id="${t}-sentiment">
-        <option ${d.sentiment==='BULL'?'selected':''}>BULL</option>
-        <option ${d.sentiment==='HOLD'?'selected':''}>HOLD</option>
-        <option ${d.sentiment==='BEAR'?'selected':''}>BEAR</option>
-        <option ${d.sentiment==='WATCH'?'selected':''}>WATCH</option>
+        ${SENTIMENTS.map(s=>`<option value="${s.key}" ${(d.sentiment||'BULL').toUpperCase()===s.key?'selected':''}>${s.label}</option>`).join('')}
       </select>
     </div>
     <div class="field">
@@ -772,6 +786,127 @@ function closeSsLightbox() {
    REORDER POSITIONS
    ═══════════════════════════════════════════════════════ */
 
+/* ── SENTIMENTS CONFIG ── */
+const DEFAULT_SENTIMENTS = [
+  { key:'BULL',     label:'BULL',     color:'#4a9b6f', locked:true  },
+  { key:'BEAR',     label:'BEAR',     color:'#c05050', locked:true  },
+  { key:'HOLD',     label:'HOLD',     color:'#a07c3a', locked:true  },
+  { key:'WATCH',    label:'WATCH',    color:'#888888', locked:true  },
+  { key:'WISHLIST', label:'WISHLIST', color:'#3a7abf', locked:false },
+];
+
+function loadSentiments() {
+  try {
+    const saved = localStorage.getItem('tributary-sentiments');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_SENTIMENTS));
+}
+
+function saveSentimentsToStorage(arr) {
+  localStorage.setItem('tributary-sentiments', JSON.stringify(arr));
+}
+
+let SENTIMENTS = loadSentiments();
+
+function getSentimentConfig(key) {
+  return SENTIMENTS.find(s => s.key === key.toUpperCase()) ||
+         { key: key.toUpperCase(), label: key.toUpperCase(), color: '#888888' };
+}
+
+function showSentimentManager() {
+  document.getElementById('editors').style.display = 'none';
+  document.getElementById('reorder-panel').classList.remove('active');
+  document.getElementById('sentiment-panel').style.display = 'block';
+  document.getElementById('sentiment-mgr-btn').style.opacity = '0.5';
+  renderSentimentManager();
+}
+
+function hideSentimentManager() {
+  document.getElementById('editors').style.display = '';
+  document.getElementById('sentiment-panel').style.display = 'none';
+  document.getElementById('sentiment-mgr-btn').style.opacity = '1';
+}
+
+function renderSentimentManager() {
+  const list = document.getElementById('sentiment-manager-list');
+  list.innerHTML = SENTIMENTS.map((s, i) => `
+    <div class="sentiment-row" draggable="true" data-idx="${i}"
+         ondragstart="smDragStart(event,${i})" ondragover="smDragOver(event,${i})"
+         ondrop="smDrop(event,${i})" ondragend="smDragEnd(event)"
+         ondragleave="e=>e.currentTarget.classList.remove('drag-over')">
+      <span class="sentiment-drag-handle">⠿</span>
+      <input class="sentiment-name-input" value="${s.label}" data-idx="${i}"
+             onchange="SENTIMENTS[${i}].label=this.value.toUpperCase().trim();this.value=SENTIMENTS[${i}].label;renderSentimentBadge(${i})">
+      <input type="color" class="sentiment-color-pick" value="${s.color}" data-idx="${i}"
+             oninput="SENTIMENTS[${i}].color=this.value;renderSentimentBadge(${i})">
+      <div class="sentiment-badge-preview" id="sm-badge-${i}"
+           style="color:${s.color};border-color:${s.color};">${s.label}</div>
+      ${s.locked
+        ? '<span class="sentiment-locked">built-in</span>'
+        : `<button class="sentiment-del-btn" onclick="deleteSentiment(${i})">✕</button>`}
+    </div>`).join('');
+}
+
+function renderSentimentBadge(i) {
+  const s = SENTIMENTS[i];
+  const el = document.getElementById('sm-badge-' + i);
+  if (el) { el.textContent = s.label; el.style.color = s.color; el.style.borderColor = s.color; }
+}
+
+let smDragIdx = null;
+function smDragStart(e, i) { smDragIdx = i; e.dataTransfer.effectAllowed='move'; }
+function smDragOver(e, i) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function smDragEnd(e) { document.querySelectorAll('.sentiment-row').forEach(r=>r.classList.remove('drag-over')); smDragIdx=null; }
+function smDrop(e, toIdx) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (smDragIdx === null || smDragIdx === toIdx) return;
+  const moved = SENTIMENTS.splice(smDragIdx, 1)[0];
+  SENTIMENTS.splice(toIdx, 0, moved);
+  renderSentimentManager();
+}
+
+function deleteSentiment(i) {
+  if (SENTIMENTS[i].locked) return;
+  SENTIMENTS.splice(i, 1);
+  renderSentimentManager();
+}
+
+function addCustomSentiment() {
+  SENTIMENTS.push({ key: 'CUSTOM' + Date.now(), label: 'NEW', color: '#7c5cbf', locked: false });
+  renderSentimentManager();
+  // Focus the new name input
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('.sentiment-name-input');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  }, 50);
+}
+
+function saveSentiments() {
+  // Sync keys with labels for custom sentiments
+  SENTIMENTS = SENTIMENTS.map(s => ({
+    ...s,
+    key: s.locked ? s.key : s.label.toUpperCase().replace(/\s+/g,'_')
+  }));
+  saveSentimentsToStorage(SENTIMENTS);
+  // Rebuild sentiment dropdown in all editor panels
+  buildSentimentDropdowns();
+  setStatus('Sentiments saved ✓', 'ok');
+  hideSentimentManager();
+}
+
+function buildSentimentDropdowns() {
+  TICKERS.forEach(t => {
+    const sel = document.getElementById(t + '-sentiment');
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = SENTIMENTS.map(s =>
+      `<option value="${s.key}" ${s.key===current||s.label===current?'selected':''}>${s.label}</option>`
+    ).join('');
+  });
+}
+
 let reorderOrder = []; // current ordered array of tickers
 let dragSrc = null;
 
@@ -795,10 +930,10 @@ let reorderGroups = { BULL: [], WATCH: [], HOLD: [], BEAR: [] };
 function buildReorderList() {
   reorderOrder = [...TICKERS];
   // Split into groups by sentiment
-  reorderGroups = { BULL: [], WATCH: [], HOLD: [], BEAR: [] };
+  reorderGroups = {}; SENTIMENTS.forEach(s => { reorderGroups[s.key] = []; });
   reorderOrder.forEach(t => {
     const s = (intel[t]?.sentiment || 'WATCH').toUpperCase();
-    const key = reorderGroups[s] !== undefined ? s : 'WATCH';
+    const key = reorderGroups[s] !== undefined ? s : (reorderGroups['WATCH'] !== undefined ? 'WATCH' : SENTIMENTS[0]?.key || 'BULL');
     reorderGroups[key].push(t);
   });
   renderReorderColumns();
@@ -806,11 +941,12 @@ function buildReorderList() {
 
 function renderReorderColumns() {
   const container = document.getElementById('reorder-columns');
-  const sentiments = ['BULL', 'WATCH', 'HOLD', 'BEAR'];
+  const sentiments = SENTIMENTS.map(s => s.key);
   container.innerHTML = sentiments.map(s => {
     const items = reorderGroups[s] || [];
+    const sc = getSentimentConfig(s);
     return `<div class="reorder-col" data-sentiment="${s}">
-      <div class="reorder-col-header ${s}">${s} <span style="font-weight:400;opacity:0.6;">(${items.length})</span></div>
+      <div class="reorder-col-header" style="color:${sc.color};border-bottom:2px solid ${sc.color};">${sc.label} <span style="font-weight:400;opacity:0.6;">(${items.length})</span></div>
       <div class="reorder-col-items" id="col-items-${s}"
            ondragover="onColDragOver(event,'${s}')"
            ondrop="onColDrop(event,'${s}')"
@@ -975,7 +1111,7 @@ async function saveOrder() {
     // 4. Update TICKERS order in memory
     // Rebuild TICKERS from groups in order BULL > WATCH > HOLD > BEAR
     TICKERS.length = 0;
-    ['BULL','WATCH','HOLD','BEAR'].forEach(s => {
+    SENTIMENTS.map(s=>s.key).forEach(s => {
       (reorderGroups[s] || []).forEach(t => {
         TICKERS.push(t);
         // Update sentiment in intel
